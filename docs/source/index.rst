@@ -10,6 +10,14 @@ Welcome to benchit's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+Table of Contents
+-----------------
+
+.. toctree::
+
+   benchit
+
+
 
 
 Indices and tables
