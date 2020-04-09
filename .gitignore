@@ -1,0 +1,18 @@
+
+# Sphinx documentation
+docs/_build/
+build/
+dist/
+*.egg-info/
+
+# Python compiled files
+*.pyc
+
+# Python files that store text content, specifically paths that were created during local python setup installation
+*.pyt
+
+# Python backup files
+*.bkp
+
+# local testing dir
+.local_testing/
