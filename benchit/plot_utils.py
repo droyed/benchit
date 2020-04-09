@@ -8,9 +8,9 @@ from types import ModuleType
 import importlib
 from collections import OrderedDict
 import matplotlib.style as style
-import matplotlib.pyplot as plt
-matplotlib.use('Qt5Agg')  # change the matplotlib backend here
+matplotlib.use('Qt5Agg') # change the matplotlib backend here
 style.use('fivethirtyeight')  # choose other styles from style.available
+import matplotlib.pyplot as plt
 
 
 def _get_specsinfo():
