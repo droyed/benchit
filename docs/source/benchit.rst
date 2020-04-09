@@ -1,17 +1,10 @@
-benchit package
-===============
-
-benchit.bench module
---------------------
+API Reference
+=============
 
 .. automodule:: benchit.bench
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-Module contents
----------------
 
 .. automodule:: benchit
     :members:
