@@ -13,8 +13,6 @@ Documentation
 Installation
 ------------
 
-Latest PyPI stable release (alongwith dependencies) :
-
 Pull latest development release on GitHub and install in the current directory :
 
 .. code:: sh
