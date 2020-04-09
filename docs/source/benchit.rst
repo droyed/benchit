@@ -1,9 +1,6 @@
 benchit package
 ===============
 
-Submodules
-----------
-
 benchit.bench module
 --------------------
 
