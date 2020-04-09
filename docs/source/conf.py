@@ -12,10 +12,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
@@ -23,28 +19,15 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'benchit'
-copyright = 'since 2020, Divakar'
-author = 'Divakar'
-
-
-import re
-import ast
-
-def get_version(init_file):
-  _version_re = re.compile(r'__version__\s+=\s+(.*)')
-  with open(init_file, 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
-  return version
-
-
-package_name = "benchit"
-init_file = '../../'+package_name+'/__init__.py'
+project = u'benchit'
+copyright = u'2020, Divakar Roy'
+author = u'Divakar Roy'
 
 # The short X.Y version
-version = get_version(init_file)
+version = u''
 # The full version, including alpha/beta/rc tags
-release = version
+release = u'0.0.1'
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -91,18 +74,8 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-
+#html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
-
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosummary'
-]
-
-#html_show_sourcelink = True
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -125,24 +98,39 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
-html_sidebars = {'**': ['fulltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html']}
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'testrtddoc'
+htmlhelp_basename = 'benchitdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
 
-latex_elements = {'classoptions': ',openany,oneside', 'babel' : '\\usepackage[english]{babel}'}
+latex_elements = {
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
+
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
+}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'testrtd.tex', 'testrtd Documentation',
-     'Divakar', 'manual'),
+    (master_doc, 'benchit.tex', u'benchit Documentation',
+     u'Divakar Roy', 'manual'),
 ]
 
 
@@ -151,7 +139,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'testrtd', 'testrtd Documentation',
+    (master_doc, 'benchit', u'benchit Documentation',
      [author], 1)
 ]
 
@@ -162,8 +150,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'testrtd', 'testrtd Documentation',
-     author, 'testrtd', 'One line description of project.',
+    (master_doc, 'benchit', u'benchit Documentation',
+     author, 'benchit', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -184,3 +172,8 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+extensions = ['sphinx.ext.napoleon']
+napoleon_google_docstring = False
+napoleon_use_param = False
+napoleon_use_ivar = True
