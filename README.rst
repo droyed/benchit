@@ -3,6 +3,14 @@ benchit (BENCHmark IT!) |GitHub-License| |GitHub-Releases|
 
 Tools to benchmark Python solutions on runtime performance and visualize. Based on `timeit`, it primarily aims to functionally simulate the `timeit <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-timeit>`__ behaviour and hence the name! This facilitates benchmarking on multiple datasets and solutions.
 
+
+Documentation
+-------------
+
+|Docs|
+
+
+
 Installation
 ------------
 
@@ -71,6 +79,9 @@ Let's consider a setup where functions accept more than one argument. Let's take
 |plot2|
 
 
+
+.. |Docs| image:: https://readthedocs.org/projects/benchit/badge/?version=latest
+    :target: https://benchit.readthedocs.io/en/latest/?badge=latest
 
 .. |GitHub-License| image:: https://img.shields.io/github/license/droyed/benchit
    :target: https://github.com/droyed/benchit/blob/master/LICENSE
