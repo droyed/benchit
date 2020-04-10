@@ -55,7 +55,7 @@ def _get_timings_perinput(funcs, input_=None):
     return timings_l
 
 
-def _get_timings(funcs, inputs, multivar=False):
+def _get_timings(funcs, inputs=None, multivar=False):
     """
     Evaluates function calls on given inputs to compute the timings.
 
@@ -63,7 +63,7 @@ def _get_timings(funcs, inputs, multivar=False):
     ----------
     funcs : list
         List of functions to be timed.
-    inputs : list or tuple
+    inputs : list or tuple or None, optional
         Each elements of it represents one dataset each.
     multivar : bool, optional
         Decides whether to consider single or multiple variable input for
@@ -257,7 +257,7 @@ def _get_params(in_, indexby):
     return params, inputs
 
 
-def timings(funcs, inputs, multivar=False, input_name=None, indexby='auto'):
+def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto'):
     """
     Evaluates function calls on given input(s) to compute the timing.
     Puts out a dataframe-like object with the input properties being put into
@@ -267,7 +267,7 @@ def timings(funcs, inputs, multivar=False, input_name=None, indexby='auto'):
     ----------
     funcs : list or tuple
         Contains the functions to be timed.
-    inputs : list or tuple
+    inputs : list or tuple or None, optional
         Each elements of it represents one dataset each.
     multivar : bool, optional
         Decides whether to consider single or multiple variable input for
@@ -301,11 +301,11 @@ def timings(funcs, inputs, multivar=False, input_name=None, indexby='auto'):
 
     # Get timings dataframe
     if isinstance(funcs, dict):
-        timings = _get_timings(list(funcs.values()), inputs_p, multivar=multivar)
-        df_timings = pd.DataFrame(timings, columns=funcs.keys())
+        t_ = _get_timings(list(funcs.values()), inputs_p, multivar=multivar)
+        df_timings = pd.DataFrame(t_, columns=funcs.keys())
     else:
-        timings = _get_timings(funcs, inputs_p, multivar=multivar)
-        df_timings = pd.DataFrame(timings, columns=[i.__name__ for i in funcs])
+        t_ = _get_timings(funcs, inputs_p, multivar=multivar)
+        df_timings = pd.DataFrame(np.atleast_2d(t_), columns=[i.__name__ for i in funcs])
 
     df_timings.columns.name = 'Functions'
 

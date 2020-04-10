@@ -136,6 +136,47 @@ We will study another multiple argument case. The setup involves `euclidean dist
 |plot4|
 
 
+No arg : Random sampling
+------------------------
+
+Finally, there might be cases when input functions have external no argument required. To create one such scenario, let's consider a setup where we compare NumPy's `random.choice` against random's `sample` to get samples without replacement. We will consider a input data of `1000,000` elements and use those functions to extract `1000` samples.
+
+.. code-block:: python
+
+    # Global inputs
+    import numpy as np
+    ar = np.arange(1000000)
+    l = ar.tolist()
+    sample_num = 1000
+    
+    # Setup input functions with no argument
+    # NumPy random choice on array data
+    def np_noreplace():
+        return np.random.choice(ar, sample_num, replace=False)
+    
+    from random import sample
+    
+    # Random sample on list data
+    def randsample_on_list():
+        return sample(l, sample_num)
+    
+    # Random sample on array data
+    def randsample_on_array():
+        return sample(ar.tolist(), sample_num)
+    
+    # Benchmark
+    import benchit
+    t = benchit.timings(funcs=[np_noreplace, randsample_on_list, randsample_on_array])
+    >>> t                                                                                                                                                                                                              
+    Functions  np_noreplace  randsample_on_list  randsample_on_array
+    Case                                                            
+    NoArg          0.031296            0.000745             0.037702
+
+One interesting observation there - NumPy's sampling function works well with array data, but is slower than random's one when the latter is fed a list data. That's the whole point with benchmarking, which is to get insights into how different modules compare on the same functionality and how different data formats affect those runtime numbers. This in turn, should help the end-user decide on choosing methods depending on the available setup.
+
+
+
+
 .. |plot1| image:: singlevar_numpy_ufuncs_timings.png
 .. |plot2| image:: singlevar_numpy_ufuncs_speedups_by_prod.png
 .. |plot3| image:: multivar_addarrays_timings.png
