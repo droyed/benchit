@@ -165,7 +165,6 @@ Finally, there might be cases when input functions have external no argument req
         return sample(ar.tolist(), sample_num)
     
     # Benchmark
-    import benchit
     t = benchit.timings(funcs=[np_noreplace, randsample_on_list, randsample_on_array])
     >>> t                                                                                                                                                                                                              
     Functions  np_noreplace  randsample_on_list  randsample_on_array
