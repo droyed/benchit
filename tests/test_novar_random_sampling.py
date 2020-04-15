@@ -1,12 +1,25 @@
-# Setup input functions and datasets
+# Global inputs
 import numpy as np
-funcs = [np.sum,np.prod,np.max]
-inputs = [np.random.rand(i) for i in 10**np.arange(5)]
+ar = np.arange(1000000)
+l = ar.tolist()
+sample_num = 1000
+
+# Setup input functions with no argument
+# NumPy random choice on array data
+def np_noreplace():
+    return np.random.choice(ar, sample_num, replace=False)
+
+from random import sample
+
+# Random sample on list data
+def randsample_on_list():
+    return sample(l, sample_num)
+
+# Random sample on array data
+def randsample_on_array():
+    return sample(ar.tolist(), sample_num)
 
 # Benchmark
 import benchit
-t = benchit.timings(funcs, inputs)
-t.plot(logy=True, logx=True, savepath='singlevar_numpy_ufuncs_timings.png')
-
-s = t.speedups(ref_func_by_index=1) # prod's index in t is 1
-s.plot(logy=False, logx=True, savepath='singlevar_numpy_ufuncs_speedups_by_prod.png')
+t = benchit.timings(funcs=[np_noreplace, randsample_on_list, randsample_on_array])
+print(t)

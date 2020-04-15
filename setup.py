@@ -25,6 +25,7 @@ package_name = "benchit"
 optional_dependencies = []
 development_dependencies = ["sphinx"]
 maintainer_dependencies = ["twine"]
+tests_dependencies = ["networkx", "scikit-learn"],
 
 version = get_version(package_name+"/__init__.py")
 repo_url = os.path.join(author_url, package_name)
@@ -36,12 +37,28 @@ setup(name=package_name,
       url=repo_url,
       author='Divakar Roy',
       author_email='droygatech@gmail.com',
+      platforms=['any'],
       license='MIT',
       packages=find_packages(),
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Intended Audience :: Developers',
+          'Topic :: System :: Benchmark',
+          'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Operating System :: OS Independent',
+          ],
+      keywords='benchmarking performance timing timeit',
       install_requires=["pandas", "numpy", "py-cpuinfo", "tqdm", "psutil", "matplotlib"],
       extras_require={
           'optional': optional_dependencies,
           'development': optional_dependencies + development_dependencies,
-          'maintainer': optional_dependencies + development_dependencies + maintainer_dependencies
+          'maintainer': optional_dependencies + development_dependencies + maintainer_dependencies,
+          'test': tests_dependencies
       },
+      include_package_data=True,
       zip_safe=False)

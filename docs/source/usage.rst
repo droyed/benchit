@@ -45,6 +45,12 @@ Examples
 
 For most cases, we just need to feed in two inputs to benchmarking function, `benchit.timings` - List of functions and list or dictionary of input datasets. The output is a table (a pandas dataframe) with the runtimes of each of those functions against each of the datasets. Dataframe has been the design choice, as it supports plotting directly from it, being one of the methods and relevant information could be stores as headers and `name` methods.
 
+.. note::
+
+  Prior to Python 3.6, dictionary keys are not maintained in the order they are inserted. So, when working with those versions and with input dataset being defined as a dictionary, to keep the order, `collections.OrderedDict <https://docs.python.org/2/library/collections.html#collections.OrderedDict>`__ could be used.
+
+
+
 Single arg : NumPy ufuncs
 -------------------------
 
