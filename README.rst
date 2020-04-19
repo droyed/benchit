@@ -1,5 +1,5 @@
-benchit (BENCHmark IT!) |GitHub-License| |GitHub-Releases|
-==========================================================
+benchit (BENCHmark IT!) |Py-Versions| |Py-LatestVersion| |GitHub-Releases| |PyPI-Downloads|  |GitHub-License|
+=============================================================================================================
 
 Tools to benchmark Python solutions on runtime performance and visualize. Based on `timeit`, it primarily aims to functionally simulate the `timeit <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-timeit>`__ behaviour and hence the name! This facilitates benchmarking on multiple datasets and solutions.
 
@@ -38,6 +38,7 @@ Consider a setup to compare NumPy ufuncs - `sum <https://docs.scipy.org/doc/nump
     >>> funcs = [np.sum,np.prod,np.max]
     >>> inputs = [np.random.rand(i) for i in 10**np.arange(5)]
 
+    >>> import benchit
     >>> t = benchit.timings(funcs, inputs)
     >>> t
     Functions       sum      prod      amax
@@ -67,15 +68,15 @@ Let's consider a setup where functions accept more than one argument. Let's take
     >>> from sklearn.metrics.pairwise import pairwise_distances
     >>> from scipy.spatial.distance import cdist
     >>> fns = [cdist, pairwise_distances]
-    
+
     # Setup input datasets
     >>> import numpy as np
     >>> in_ = {(n,3):[np.random.rand(n,3), np.random.rand(n,3)] for n in [10,100,500,1000,4000]}
-    
+
     # Get benchmarking object (dataframe-like) and plot results
     >>> t = benchit.timings(fns, in_, multivar=True)
     >>> t.plot()
-    
+
 |plot2|
 
 
@@ -88,6 +89,15 @@ Let's consider a setup where functions accept more than one argument. Let's take
 
 .. |GitHub-Releases| image:: https://img.shields.io/github/v/release/droyed/benchit
    :target: https://github.com/droyed/benchit/releases/latest
+
+.. |PyPI-Downloads| image:: https://img.shields.io/pypi/dm/benchit.svg?label=pypi%20downloads&logo=PyPI&logoColor=white
+   :target: https://pypi.org/project/benchit
+
+.. |Py-LatestVersion| image:: https://img.shields.io/pypi/v/benchit.svg
+   :target: https://pypi.org/project/benchit
+
+.. |Py-Versions| image:: https://img.shields.io/pypi/pyversions/benchit.svg?logo=python&logoColor=white
+   :target: https://pypi.org/project/benchit
 
 .. |plot1| image:: ./docs/source/singlevar_numpy_ufuncs_timings.png
 .. |plot2| image:: ./docs/source/multivar_euclidean_timings.png
