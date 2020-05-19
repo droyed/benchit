@@ -4,7 +4,7 @@ import timeit
 import functools
 import warnings
 from tqdm import trange
-from benchit.plot_utils import _add_specs_as_title, _add_specs_as_textbox
+from benchit.plot_utils import _add_specs_as_title, _add_specs_as_textbox, _truncate_cmap
 
 # Parameters
 _TIMEOUT = 0.2
@@ -24,8 +24,8 @@ def _get_timings_perinput(funcs, input_=None):
 
     Returns
     -------
-    timings_l : list
-        It lists the timings.
+    list
+        List of timings from benchmarking.
 
     Notes
     -----
@@ -77,8 +77,8 @@ def _get_timings(funcs, inputs=None, multivar=False):
 
     Returns
     -------
-    timings : ndarray
-        It lists the timings. Each row is for one dataset and each column
+    numpy.ndarray
+        Lists of timings such that each row is for one dataset and each column
         represents a function call.
     """
 
@@ -89,7 +89,7 @@ def _get_timings(funcs, inputs=None, multivar=False):
         timings = np.empty((l1, l2))
         for i in trange(l1, desc='Loop datasets ', leave=False):
             input_ = inputs[i]
-            if multivar == 0:
+            if not multivar:
                 input_ = [input_]
             timings[i, :] = _get_timings_perinput(funcs, input_)
     return timings
@@ -106,7 +106,7 @@ def _get_possible_indexbys(inputs):
 
     Returns
     -------
-    possible_indexbys : list
+    list
         List of strings that lists the various index-by options given the type
         and format of input datasets.
 
@@ -154,7 +154,7 @@ def _get_params(in_, indexby):
     params : dict
         Dictionary that holds plotting paramters for each of the datasets.
         This would be used for setting xticklabels and x-label later on for plotting.
-    inputs : list
+    list
         List of input datasets
     """
 
@@ -170,9 +170,9 @@ def _get_params(in_, indexby):
 
         Returns
         -------
-        xticklabels : list
+        list
             List of strings to be used for plotting as xticklabels.
-        indexby_str : str
+        str
             String that sets indexby parameter to be used in other functions.
 
         """
@@ -229,7 +229,7 @@ def _get_params(in_, indexby):
 
         Returns
         -------
-        Same as with _get_params_from_list
+        Same as with _get_params_from_list.
 
         """
 
@@ -287,14 +287,14 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
 
     Returns
     -------
-    benchObj : Dataframe-like custom object
+    BenchmarkObj
         Timings stored in a dataframe-like object with each row for each dataset
         and each column represents a function call.
 
     """
 
     # Setup label parameters
-    if multivar == 1 and not isinstance(inputs, dict):
+    if multivar and not isinstance(inputs, dict):
         indexby = 'item'
     p, inputs_p = _get_params(inputs, indexby=indexby)
     xticklabels, xlabel_from_inputs = p['xticklabels'], p['xlabel']
@@ -310,7 +310,7 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     df_timings.columns.name = 'Functions'
 
     # Setup index properties in the dataframe
-    if isinstance(inputs, dict) and multivar == 1:
+    if isinstance(inputs, dict) and multivar:
         df_timings.index = inputs.keys()
     else:
         df_timings.index = xticklabels
@@ -323,83 +323,191 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     benchObj = BenchmarkObj(df_timings)
     return benchObj
 
+def bench(df, dtype='t', copy=False):
+    """
+    Constructor function for creating BenchmarkObj object from a pandas dataframe. 
+    With input arguments, it could set as a timings or speedups or scaled-timings object.
+    Additionally, the dataframe could be copied so that source dataframe stays unaffected.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        Dataframe listing the timings or speedups or scaled-timings or just any 2D data,
+        i.e. number of levels with rows and columns is 1. 
+        Also, the dataframe should have the benchmarking information setup in the standardized setup way.
+        Columns represent function names, alongwith df.columns.name assigned as 'Functions'.
+        Index values represent dataset IDs, alongwith df.index.name assigned based on dataset type.           
+    dtype : str, optional
+        Datatype value that decides between timings or speedups or scaled-timings.
+        Mapping strings are : 't' -> timings, 'st' -> scaled-timings, 's' -> speedups.
+    copy : bool, optional
+        Decides whether to copy data when constructing benchamrking object.        
+
+    Returns
+    -------
+    BenchmarkObj
+        Data stored in BenchmarkObj.
+        
+    """
+    
+    map_dtype = {'t':'timings', 's':'speedups', 'st':'scaled_timings'}
+    if dtype in map_dtype:
+        dt = map_dtype[dtype]
+    elif dtype in map_dtype.values():
+        dt = dtype
+    else:
+        raise TypeError('data type ' + '"' + str(dtype) + '" not understood')        
+
+    if not copy:
+        return BenchmarkObj(df, dtype=dt)
+    else:
+        return BenchmarkObj(df.copy(), dtype=dt)
+    
 
 class BenchmarkObj(object):
     """
-    Class that holds various methods to benchmark solutions on various aspects
-    of benchmarking metrics. This also includes timing and plotting methods.
-    The basic building block is a pandas dataframe that lists timings off various
-    methods. The index has the various datasets and headers are functions.
+    Class that holds various methods to benchmark solutions on various aspects of benchmarking metrics.
+    This also includes timing and plotting methods. The basic building block is a pandas dataframe that
+    lists timings off various methods. The index has the various datasets and headers are functions.
+    This class is intended to hold timings data. It is the central building block to benchmarking workflow..
     """
 
-    def __init__(self, df_timings):
-        """
-        Parameters
-        ----------
-        df_timings : dataframe
-            The timings of function calls across various datasets as a pandas dataframe.
-        """
-
+    def __init__(self, df_timings, dtype='timings'):
         self.__df_timings = df_timings
+        self.dtype = dtype
+        self.__cols = df_timings.columns
 
-    def scaled_timings(self, ref_func_by_index):
+    def scaled_timings(self, index):
         """
         Evaluates scaled timings for all function calls with respect to one among them.
 
         Parameters
         ----------
-        ref_func_by_index : int
+        index : int
             Column ID of the reference function call in the input BenchmarkObj.
             The scaled timings for all function calls are computed with respect to
             this reference column ID.
 
         Returns
         -------
-        st : BenchmarkObj
+        BenchmarkObj
             Scaled timings.
         """
+        
+        if self.dtype != 'timings':
+            raise AttributeError('scaled_timings is not applicable on '+self.dtype+' object')            
 
-        idx = ref_func_by_index
-        st = self.__df_timings.div(self.__df_timings.iloc[:, idx], axis=0)
-        st.rename({st.columns[idx]: 'Ref:' + st.columns[idx]}, axis=1, inplace=True)
-        return BenchmarkObj(st)
+        st = self.__df_timings.div(self.__df_timings.iloc[:, index], axis=0)
+        st.rename({st.columns[index]: 'Ref:' + st.columns[index]}, axis=1, inplace=True)
+        stB = BenchmarkObj(st,'scaled_timings')
+        return stB
 
-    def speedups(self, ref_func_by_index):
+    def speedups(self, index):
         """
         Evaluates speedups for all function calls with respect to one among them.
 
         Parameters
         ----------
-        ref_func_by_index : int
+        index : int
             Same as with scaled_timings.
 
         Returns
         -------
-        st : BenchmarkObj
+        BenchmarkObj
             Speedups.
         """
+        
+        if self.dtype != 'timings':
+            raise AttributeError('speedups is not applicable on '+self.dtype+' object')            
+        
+        s = 1./BenchmarkObj.scaled_timings(self, index).to_dataframe()
+        sB = BenchmarkObj(s,'speedups')
+        return sB
 
-        return BenchmarkObj(1./BenchmarkObj.scaled_timings(self, ref_func_by_index).__df_timings)
+    def drop(self, labels, axis):
+        """
+        Drops functions off the benchmarking object based on column index numbers.
+        It is an in-place operation.
 
-    def to_pandas_dataframe(self):
-        """Returns underlying pandas dataframe object."""
-        return self.__df_timings
+        Parameters
+        ----------
+        index : int or tuple/list of int column index value(s) to be dropped.
 
+        Returns
+        -------
+        None
+            NA.
+        """
+        df = self.__df_timings        
+        self.__df_timings = df.drop(labels,axis=axis)
+        return
+                
+    def rank(self, mode='range'):
+        """
+        Rank different functions based on their performance number and rank them by
+        changing the columns order accordingly. It is an in-place operation.
+    
+        Parameters
+        ----------
+        mode : str, optional
+            Sets the ranking criteria to rank different functions.
+            It must be one among - 'range', 'constant', 'index'.        
+            
+        Returns
+        -------
+        None
+            NA.
+        """
+                     
+        df = self.__df_timings                
+        
+        if mode == 'range':
+            R = np.arange(1,len(df)+1)
+        elif mode == 'constant':
+            R = np.ones(len(df))
+        elif mode == 'index':
+            idx = np.array(df.index)
+            d = idx.dtype
+            if np.issubdtype(d, np.floating) or np.issubdtype(d, np.integer):
+                R = df.index.values
+            else:
+                raise ValueError("Dataframe index is not int or float. Hence, 'index' is an invalid option as mode.")
+        else:
+            raise ValueError("Invalid option as mode.")
+    
+        df_ranked = df.iloc[:,R.dot(df).argsort()[::-1]]
+        df[:] = df_ranked
+        df.columns = df_ranked.columns
+        return
+
+    def copy(self):
+        """
+        Makes a copy.        
+            
+        Returns
+        -------
+        BenchmarkObj
+            Copy of input BenchmarkObj object.
+        """
+        
+        return BenchmarkObj(self.__df_timings.copy(), self.dtype)
+
+        
     def plot(self, set_xticks_from_index=True,
              xlabel=None,
-             ylabel='Runtime (s)',
+             ylabel=None,
              colormap='jet',
-             marker='x',
+             marker='',
              logx=False,
              logy=True,
              grid=True,
              linewidth=2,
              add_specs_as='title',
              modules=None,
-             savepath=None):
+             save=None):
         """
         Plots dataframe using given input parameters.
-
+    
         Parameters
         ----------
         set_xticks_from_index : bool, optional
@@ -424,54 +532,75 @@ class BenchmarkObj(object):
             Decides the position to add specs information.
         modules : dict, optional
             Dictionary of modules.
-        savepath : str, optional
+        save : str or None, optional
             Path to save plot.
-
+    
         Returns
         -------
-        AxesSubplot
-            Plot of data from BenchmarkObj.
+        matplotlib.axes._subplots.AxesSubplot
+            Plot of data from object's dataframe.
         """
-
-        t = self.__df_timings  # input dataframe to be plotted
-
-        if len(t) == 1 and logx:
+    
+        # Get dataframe and dtype        
+        dtype = self.dtype                
+        df = self.__df_timings  
+        
+        if ylabel is None:
+            ylabel_map = {'timings':'Runtime (s)', 'speedups':'Speedup (x)', 'scaled_timings':'Scaled Runtime (x)',}
+            ylabel = ylabel_map[dtype]        
+    
+        if len(df) == 1 and logx:
             logx = False
             warnings.warn("Length of input dataframe is 1. Forcing it to linear scale for logx.")
-
-        tp = t.plot(colormap=colormap, marker=marker, logx=logx, logy=logy, linewidth=linewidth)
-
-        if set_xticks_from_index == 1:
-            tp.set_xticklabels(t.index)
-
-            idx = np.array(t.index)
+            
+        available_linestyles = ['-.','--','-']
+        extls = np.resize(available_linestyles, df.shape[1]).tolist()
+        dfp = df.plot(style=extls, colormap=_truncate_cmap(colormap), logx=logx, logy=logy, linewidth=linewidth)
+    
+        if set_xticks_from_index:
+            dfp.set_xticklabels(df.index)
+    
+            idx = np.array(df.index)
             d = idx.dtype
             if np.issubdtype(d, np.floating) or np.issubdtype(d, np.integer):
-                tp.set_xticks(t.index)
+                dfp.set_xticks(df.index)
             else:
                 warnings.warn("Invalid index for use as plot xticks. Using range as the default xticks.")
-                tp.set_xticks(range(len(t)))
-
-        if grid == 1:
-            tp.grid(True, which="both", ls="-")
+                dfp.set_xticks(range(len(df)))
+    
+        if grid:
+            dfp.grid(True, which="both", ls="-")
         if xlabel is not None:
-            tp.set_xlabel(xlabel)
+            dfp.set_xlabel(xlabel)
         if ylabel is not None:
-            tp.set_ylabel(ylabel)
-
+            dfp.set_ylabel(ylabel)
+    
         if add_specs_as == 'title':
-            _add_specs_as_title(tp, modules=modules)
+            _add_specs_as_title(dfp, modules=modules)
         elif add_specs_as == 'textbox':
-            _add_specs_as_textbox(tp, modules=modules)
+            _add_specs_as_textbox(dfp, modules=modules)
         else:
             raise ValueError("Must be a string with value 'title' or 'textbox'")
-
+    
         # Save axes plot as an image file
-        if savepath is not None:
-            tp.figure.savefig(savepath, bbox_inches='tight')
+        if save is not None:
+            dfp.figure.savefig(save, bbox_inches='tight')
+    
+        return dfp
 
-        return tp
+    def reset_columns(self):
+        """Resets columns to original order."""
+        self.__df_timings = self.__df_timings.loc[:,self.__cols]
+        return
 
+    def to_dataframe(self, copy=False):
+        """Returns underlying pandas dataframe object."""
+
+        if not copy:
+            return self.__df_timings
+        else:
+            return self.__df_timings.copy()
+    
     def __str__(self):
         return repr(self.__df_timings)
 

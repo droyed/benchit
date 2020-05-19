@@ -44,21 +44,21 @@ Let's benchmark NumPy ufuncs - `sum <https://docs.scipy.org/doc/numpy/reference/
     # Benchmark and plot
     >>> import benchit
     >>> t = benchit.timings(funcs, inputs)
-    >>> t.plot(logy=True, logx=True)
+    >>> t.plot(logy=True, logx=True, save='index_timings.png')
 
-|plot1|
+|index_timings|
 
-Though these perform entirely different operations, it was meant to showcase a basic usage. For a detailed explanation on the usage and more realistic scenarios, jump over to - :doc:`usage`.
+Though these perform entirely different operations, it was meant to showcase a basic usage. For a detailed explanation on the usage and more realistic scenarios, jump over to - :doc:`workflow`.
 
 
-Table of Contents
------------------
+Benchit - Contents
+------------------
 
 .. toctree::
 
    intro
-   code_design
-   usage
+   workflow
+   realistic_cases
    changes
    benchit
 
@@ -70,5 +70,4 @@ Appendix
 * :ref:`modindex`
 
 
-
-.. |plot1| image:: singlevar_numpy_ufuncs_timings.png
+.. |index_timings| image:: index_timings.png

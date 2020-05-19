@@ -64,5 +64,5 @@ for USE_INPUT_AS_DICT in [False, True]:
                 print("Status = Fail. Value error - "+str(E))
                 
             if success==1:
-                index = benchit.timings([f],v,indexby=o).to_pandas_dataframe().index.tolist()
+                index = benchit.timings([f],v,indexby=o).get_dataframe().index.tolist()
                 print("Status = Success! Index : " + str(index))

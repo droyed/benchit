@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 import numpy as np
 import benchit
 
@@ -23,19 +25,20 @@ benchit.print_specs(benchit.extract_modules_from_globals(globals()))
 
 print("--> Plotting timings plot with specs as title & saving it")
 saveplot_fname = 'test_methods_output_plot_with_title.png'
-t.plot(logx=True, add_specs_as='title', savepath=saveplot_fname)
+t.plot(logx=True, add_specs_as='title', save=saveplot_fname)
+plt.close("all")
 
 print("--> Plotting timings plot with specs as textbox & saving it")
 saveplot_fname = 'test_methods_output_plot_with_textbox.png'
-t.plot(logx=True, add_specs_as='textbox', savepath=saveplot_fname)
+t.plot(logx=True, add_specs_as='textbox', save=saveplot_fname)
+plt.close("all")
 
 print("--> Plotting timings plot with specs as title & modules in specs & saving it")
 saveplot_fname = 'test_methods_output_plot_with_title_and_modules.png'
-t.plot(logx=True, add_specs_as='title', modules=benchit.extract_modules_from_globals(globals()), savepath=saveplot_fname)
+t.plot(logx=True, add_specs_as='title', modules=benchit.extract_modules_from_globals(globals()), save=saveplot_fname)
+plt.close("all")
 
 print("--> Plotting timings plot with specs as textbox & modules in specs & saving it")
 saveplot_fname = 'test_methods_output_plot_with_textbox_and_modules.png'
-t.plot(logx=True, add_specs_as='textbox', modules=benchit.extract_modules_from_globals(globals()), savepath=saveplot_fname)
-
-import matplotlib.pyplot as plt
+t.plot(logx=True, add_specs_as='textbox', modules=benchit.extract_modules_from_globals(globals()), save=saveplot_fname)
 plt.close("all")

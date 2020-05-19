@@ -43,14 +43,6 @@ Consider a setup to compare NumPy ufuncs - `sum <https://docs.scipy.org/doc/nump
 
     >>> import benchit
     >>> t = benchit.timings(funcs, inputs)
-    >>> t
-    Functions       sum      prod      amax
-    Len                                    
-    1          0.000004  0.000004  0.000003
-    10         0.000004  0.000004  0.000004
-    100        0.000004  0.000004  0.000004
-    1000       0.000004  0.000007  0.000004
-    10000      0.000008  0.000022  0.000007
 
 It's a *dataframe-like* object and as such we can plot it. It automatically adds in specs into the title area to convey all of available benchmarking info :
 
@@ -58,7 +50,7 @@ It's a *dataframe-like* object and as such we can plot it. It automatically adds
 
     >>> t.plot(logy=True, logx=True)
 
-|plot1|
+|readme_1_timings|
 
 More realistic example
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -67,20 +59,16 @@ Let's consider a setup where functions accept more than one argument. Let's take
 
 .. code-block:: python
 
-    # Setup input functions
     >>> from sklearn.metrics.pairwise import pairwise_distances
     >>> from scipy.spatial.distance import cdist
     >>> fns = [cdist, pairwise_distances]
 
-    # Setup input datasets
     >>> import numpy as np
-    >>> in_ = {(n,3):[np.random.rand(n,3), np.random.rand(n,3)] for n in [10,100,500,1000,4000]}
+    >>> in_ = {n:[np.random.rand(n,3), np.random.rand(n,3)] for n in [10,100,500,1000,4000]}
+    >>> t = benchit.timings(fns, in_, multivar=True, input_name='Array-length')
+    >>> t.plot(logx=True)
 
-    # Get benchmarking object (dataframe-like) and plot results
-    >>> t = benchit.timings(fns, in_, multivar=True)
-    >>> t.plot()
-
-|plot2|
+|readme_2_timings|
 
 
 
@@ -102,8 +90,8 @@ Let's consider a setup where functions accept more than one argument. Let's take
 .. |Py-Versions| image:: https://img.shields.io/pypi/pyversions/benchit.svg?logo=python&logoColor=white
    :target: https://pypi.org/project/benchit
 
-.. |plot1| image:: ./docs/source/singlevar_numpy_ufuncs_timings.png
-.. |plot2| image:: ./docs/source/multivar_euclidean_timings.png
+.. |readme_1_timings| image:: ./docs/source/readme_1_timings.png
+.. |readme_2_timings| image:: ./docs/source/readme_2_timings.png
 
 
 

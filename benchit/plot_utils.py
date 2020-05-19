@@ -7,6 +7,9 @@ from psutil import virtual_memory
 from types import ModuleType
 import importlib
 from collections import OrderedDict
+import numpy as np
+import matplotlib.colors as colors
+import colorsys
 import matplotlib.style as style
 matplotlib.use('Qt5Agg') # change the matplotlib backend here
 style.use('fivethirtyeight')  # choose other styles from style.available
@@ -25,7 +28,7 @@ def _get_specsinfo():
     Returns
     -------
     dict
-        Most relevant system specifications.
+        Dictionary listing most relevant system specifications.
     """
 
     return OrderedDict([('CPU', get_cpu_info()['brand'] + ', ' + str(multiprocessing.cpu_count()) + ' Cores'),
@@ -260,14 +263,14 @@ def _add_specs_as_textbox(ax, y_offset=0.85, modules=None):
 
 def extract_modules_from_globals(glb, mode='valid'):
     """
-    Get modules from globals dict
+    Get modules from globals dict.
 
     Parameters
     ----------
     glb : dict
-        Dictionary containing the modules
+        Dictionary containing the modules.
     mode : str, optional
-        Must be one of - `'valid'`, `'all'`
+        Must be one of - `'valid'`, `'all'`.
 
     Returns
     -------
@@ -287,3 +290,31 @@ def extract_modules_from_globals(glb, mode='valid'):
         return [l for l in unq_modules if not l.__name__.startswith('_')]
     else:
         return Exception('Wrong argument for mode!')
+
+
+def _truncate_cmap(cmap, Y_thresh=0.65, start_offN = 100):
+    """
+    Truncate colormap so that we avoid a certain range of Y values in YIQ color space.
+
+    Parameters
+    ----------
+    cmap : str
+        Colormap string.
+    Y_thresh : int, optional
+        Y threshold value.
+    start_offN : int, optional
+        Starting number of levels.
+
+    Returns
+    -------
+    matplotlib.colors.LinearSegmentedColormap
+        Truncated colormap.
+    """
+
+    cmap_func = plt.get_cmap(cmap)
+    allcolors = cmap_func(np.linspace(0., 1., start_offN))
+    mask = np.array([colorsys.rgb_to_yiq(*c[:-1])[0]<=Y_thresh for c in allcolors])
+    if ~mask.any():
+        return cmap # not truncated
+    else:
+        return colors.LinearSegmentedColormap.from_list('trunc_cmap', allcolors[mask])
