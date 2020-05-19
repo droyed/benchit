@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.2 (2020-05-18)
+0.0.2 (2020-05-19)
 ------------------
 
 With this release the focus has been to move the workflow from a tools perspective to a platform one. There's work done on a much tighter integration with `pandas-dataframe` format that should help to keep things on a platform-specific workflow.
