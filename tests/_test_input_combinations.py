@@ -5,8 +5,8 @@ import networkx as nx
 import benchit
 
 # For quick view, on Linux systems :
-# python test_input_combinations.py > .tmp.txt; cat .tmp.txt
-# python3 test_input_combinations.py > .tmp.txt; cat .tmp.txt
+# python _test_input_combinations.py > .tmp.txt; cat .tmp.txt
+# python3 _test_input_combinations.py > .tmp.txt; cat .tmp.txt
 
 def f(i):
     return
