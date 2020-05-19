@@ -1,5 +1,5 @@
-benchit package
-===============
+API Reference
+=============
 
 Submodules
 ----------
@@ -11,15 +11,6 @@ benchit.main module
    :members:
    :undoc-members:
    :show-inheritance:
-
-benchit.plot\_utils module
---------------------------
-
-.. automodule:: benchit.plot_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 
 Module contents
 ---------------
