@@ -15,16 +15,36 @@ style.use('fivethirtyeight')  # choose other styles from style.available
 import matplotlib.pyplot as plt
 
 
-def _add_specs_as_title(dfp, specs_fontsize=None, _FULLSCREENDEBUG=False, modules=None):
+def _add_specs_as_title(ax, specs_fontsize=None, debug_plotfs=False, modules=None):
+    """
+    Adds title with system specifications into an axes plot.
+
+    Parameters
+    ----------
+    ax : AxesSubplot
+        Plot into which the title is to be inserted.
+    specs_fontsize : float or int or None, optional
+            Fontsize for specifications text displayed as title.
+    debug_plotfs : bool, optional
+            Boolean flag to decide to show debug information on plot full-screen show.
+    modules : dict
+        Dictionary of modules.
+
+    Returns
+    -------
+    None
+        NA.
+    """
+    
     figManager = plt.get_current_fig_manager()
     done, status = _full_screen_or_toggle(figManager)
-    if _FULLSCREENDEBUG:
+    if debug_plotfs:
         print('Fullscreen debug status : '+status)
         print('Backend : '+matplotlib.get_backend())    
         print('Fullscreen done : '+str(done))
     
     if specs_fontsize is None:
-        specs_fontsize = dfp.get_xticklabels()[0].get_fontsize()
+        specs_fontsize = ax.get_xticklabels()[0].get_fontsize()
     
     plt.pause(0.001)
 
@@ -36,13 +56,30 @@ def _add_specs_as_title(dfp, specs_fontsize=None, _FULLSCREENDEBUG=False, module
     plt_specsinfo = "\n".join([p1, p2] + p3_split)
     
     # Set specs as title and show
-    dfp.set_title(plt_specsinfo, loc='left', fontsize=specs_fontsize)
+    ax.set_title(plt_specsinfo, loc='left', fontsize=specs_fontsize)
     plt.pause(0.001)
     plt.show(block=False)    
-    return dfp
+    return ax
 
 
 def _full_screen_or_toggle(figManager):
+    """
+    Makes the current figure fullscreen.
+
+    Parameters
+    ----------
+    figManager : matplotlib backend FigureManager
+        Figure manager of the current figure.
+        
+    Returns
+    -------
+    done : bool
+        Boolean flag that is True or False if full-screen worked or not respectively.
+        Note that for inlined plots on notebooks, this won't work.
+    status : str
+        Status message for debugging.
+    """
+
     done = True
     status = ''
     try:

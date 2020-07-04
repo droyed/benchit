@@ -520,7 +520,7 @@ class BenchmarkObj(object):
              linewidth=2,
              figsize = None,
              specs_fontsize = None,
-             _FULLSCREENDEBUG = False,
+             debug_plotfs = False,
              modules=None,
              save=None):
         """
@@ -553,7 +553,7 @@ class BenchmarkObj(object):
             Tuple with syntax (figure_width, figure_height) for the figure window.
         specs_fontsize : float or int or None, optional
             Fontsize for specifications text displayed as title.
-        _FULLSCREENDEBUG : bool, optional
+        debug_plotfs : bool, optional
             Flag to decide whether to display debug info on fullscreen showing of plot.
         modules : dict, optional
             Dictionary of modules.
@@ -605,7 +605,7 @@ class BenchmarkObj(object):
             dfp.set_ylabel(ylabel)
 
         # Display in fullscreen and add specs as title
-        _add_specs_as_title(dfp, specs_fontsize=specs_fontsize, _FULLSCREENDEBUG=_FULLSCREENDEBUG, modules=modules)
+        _add_specs_as_title(dfp, specs_fontsize=specs_fontsize, debug_plotfs=debug_plotfs, modules=modules)
 
         # Save axes plot as an image file
         if save is not None:
