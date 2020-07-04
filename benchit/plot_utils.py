@@ -11,10 +11,58 @@ import numpy as np
 import matplotlib.colors as colors
 import colorsys
 import matplotlib.style as style
-matplotlib.use('Qt5Agg') # change the matplotlib backend here
 style.use('fivethirtyeight')  # choose other styles from style.available
 import matplotlib.pyplot as plt
 
+
+def _add_specs_as_title(dfp, specs_fontsize=None, _FULLSCREENDEBUG=False, modules=None):
+    figManager = plt.get_current_fig_manager()
+    done, status = _full_screen_or_toggle(figManager)
+    if _FULLSCREENDEBUG:
+        print('Fullscreen debug status : '+status)
+        print('Backend : '+matplotlib.get_backend())    
+        print('Fullscreen done : '+str(done))
+    
+    if specs_fontsize is None:
+        specs_fontsize = dfp.get_xticklabels()[0].get_fontsize()
+    
+    plt.pause(0.001)
+
+    # Get plot specifications
+    p1, p2, p3 = _latex_formatted_specsinfo(modules=modules)
+    L = max([len(i) for i in [p1, p2]])
+    p3_split = _splitstr(p3, L)
+    p3_split = [s.strip() for s in p3_split]    
+    plt_specsinfo = "\n".join([p1, p2] + p3_split)
+    
+    # Set specs as title and show
+    dfp.set_title(plt_specsinfo, loc='left', fontsize=specs_fontsize)
+    plt.pause(0.001)
+    plt.show(block=False)    
+    return dfp
+
+
+def _full_screen_or_toggle(figManager):
+    done = True
+    status = ''
+    try:
+        figManager.window.showMaximized()
+        status += '\nStatus : figManager.window.showMaximized worked.'
+    except Exception as errMsg:
+        status += '\nfigManager.window.showMaximized failed. Reason : '+str(errMsg)
+        try:
+            figManager.resize(*figManager.window.maxsize())
+            status += '\nfigManager.resize worked.'
+        except Exception as errMsg:
+            status += '\nfigManager.resize failed. Reason : '+str(errMsg)
+            try:
+                figManager.full_screen_toggle()  
+                status += '\nfigManager.full_screen_toggle worked.' 
+            except Exception as errMsg:
+                status += '\nfigManager.full_screen_toggle failed; no fullscreen applied. Reason : '+str(errMsg)
+                done = False
+    
+    return done, status
 
 def _get_specsinfo():
     """
@@ -31,7 +79,14 @@ def _get_specsinfo():
         Dictionary listing most relevant system specifications.
     """
 
-    return OrderedDict([('CPU', get_cpu_info()['brand'] + ', ' + str(multiprocessing.cpu_count()) + ' Cores'),
+    cpuinfo_ = get_cpu_info()
+    if 'brand' in cpuinfo_:
+        CPU_brand = cpuinfo_['brand']
+    elif 'brand_raw' in cpuinfo_:
+        CPU_brand = cpuinfo_['brand_raw']
+    else:
+        CPU_brand = 'CPU - NA'
+    return OrderedDict([('CPU', CPU_brand + ', ' + str(multiprocessing.cpu_count()) + ' Cores'),
                         ('Memory (GB)', str(round(virtual_memory().total / 1024.**3, 1))),
                         ('ByteOrder', sys.byteorder.capitalize()),
                         ('Kernel-OS', platform.platform()),
@@ -131,15 +186,14 @@ def _latex_formatted_specsinfo(modules=None):
         return r"$\bf{" + s + "}$"
 
     d = _get_specsinfo()
-    cpu = _bold_latex("CPU :") + d['CPU'] + ', ' + \
-        _bold_latex("Mem (GB) :") + d['Memory (GB)'] + ', ' + \
-        _bold_latex("ByteO :") + d['ByteOrder']
+    cpu = _bold_latex("CPU :") + d['CPU'] + '  ' + _bold_latex("Mem (GB) :") +\
+        d['Memory (GB)'] + '  ' + _bold_latex("ByteO :") + d['ByteOrder']
     kernel_os = _bold_latex("Kernel, OS : ") + d['Kernel-OS']
     python_modules = _bold_latex("Python : ") + d['Python']
     if modules is not None:
         mod = _get_module_versions(modules)
-        modules_info = ', '.join([_bold_latex(k + ": ") + v for (k, v) in mod.items()])
-        python_modules += ', ' + modules_info
+        modules_info = '  '.join([_bold_latex(k + ": ") + v for (k, v) in mod.items()])
+        python_modules += '  ' + modules_info
     return cpu, kernel_os, python_modules
 
 
@@ -174,91 +228,6 @@ def _splitstr(m_str, maxlen, delimiter=','):
     idx.append(len(lens))
     m_str_split_grp = [m_str_split[i:j] for (i, j) in zip(idx[:-1], idx[1:])]
     return [delimiter.join(i) for i in m_str_split_grp]
-
-
-def _add_specs_as_title(ax, modules=None):
-    """
-    Add title with system specifications into an axes plot.
-
-    Parameters
-    ----------
-    ax : AxesSubplot
-        Plot into which the title is to be inserted.
-    modules : dict
-        Dictionary of modules.
-
-    Returns
-    -------
-    None
-        NA.
-    """
-
-    top_offset_buffer = 0.01
-
-    p1, p2, p3 = _latex_formatted_specsinfo(modules=modules)
-    L = max([len(i) for i in [p1, p2]])
-    p3_split = _splitstr(p3, L)
-    p3_split = [s.strip() for s in p3_split]
-
-    # Use the xticklabels fontsize for the title as well
-    FSZ = ax.get_xticklabels()[0].get_fontsize()
-    title = ax.set_title("\n".join([p1, p2] + p3_split), loc='left', fontsize=FSZ)
-
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
-
-    plt.pause(0.1)
-
-    fig = ax.figure
-    W1, W2 = title.get_window_extent().size[1], fig.get_window_extent().height
-    fig.subplots_adjust(top=1 - W1 / W2 - top_offset_buffer)
-
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
-    plt.pause(0.001)
-    plt.show(block=False)
-    return
-
-
-def _add_specs_as_textbox(ax, y_offset=0.85, modules=None):
-    """
-    Add textbox with system specifications into an axes plot.
-
-    Parameters
-    ----------
-    ax : AxesSubplot
-        Plot into which the textbox is to be inserted.
-    y_offset : float
-        Y position of the textbox.
-
-    Returns
-    -------
-    None
-        NA.
-    """
-
-    top_offset_buffer = 0.01
-
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
-
-    fig = ax.figure
-
-    p1, p2, p3 = _latex_formatted_specsinfo(modules=modules)
-    L = max([len(i) for i in [p1, p2]])
-    p3_split = _splitstr(p3, L)
-    specs_txt2 = '\n'.join([p1, p2] + p3_split)
-
-    fig.text(0.3, y_offset, specs_txt2)
-    fig.subplots_adjust(top=y_offset - top_offset_buffer)
-    plt.pause(0.001)
-
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
-    plt.pause(0.001)
-
-    plt.show(block=False)
-    return
 
 
 def extract_modules_from_globals(glb, mode='valid'):

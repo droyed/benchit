@@ -64,6 +64,7 @@ Resultant plot would look something like this :
 
 These `4` lines of codes would be enough for most of the benchmarking workflows.
 
+
 Speedups & scaled-timings
 -------------------------
 
@@ -86,6 +87,7 @@ Finally, the scaled-timings :
     >>> st.plot(logy=False, logx=True, save='scaledtimings_by_prod.png')
 
 |scaledtimings_by_prod|
+
 
 Features
 ========
@@ -209,6 +211,38 @@ Back to the same `Minimal benchmarking workflow`, let's say we want to see if co
 At least one interesting observation could be made there. If we compare combined one of `sum & max` against `prod`, the former wins on lower timings only with larger datasets.
 
 Earlier listed :ref:`Drop` is based on this strategy of working with the inherent dataframe data. There are endless possibilities and scenarios where having a dataframe data could be useful and necessary!
+
+
+Extending functionality
+=======================
+
+Mixing in lambdas
+-----------------
+
+`Lambda functions <https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions>`__ could be mixed into our functions for benchmarking with a dictionary. This is useful for directly incorporating one-liner solutions without the need of defining them beforehand. Let's take a sample setup where we will tile a `1D` array twice with various solutions as lambda and regular functions mixed in -
+
+.. code-block:: python
+
+    import numpy as np
+
+    def numpy_concat(a):
+        return np.concatenate([a, a])
+
+    # We need a dictonary to give each lambda an unique name, through keys
+    funcs = {'r_':lambda a:np.r_[a, a],
+             'stack+reshape':lambda a:np.stack([a, a]).reshape(-1),
+             'hstack':lambda a:np.hstack([a, a]),
+             'concat':numpy_concat,
+             'tile':lambda a:np.tile(a,2)}
+
+
+Thus, this `funcs` could be then be used to benchmark with `benchit.timings`.
+
+
+Notebook inline plot
+---------------------
+
+Inlining plots in IPython notebooks or Jupyter notebooks is supported with `%matplotlib inline` or `%matplotlib notebook`.
 
 
 .. |timings| image:: timings.png

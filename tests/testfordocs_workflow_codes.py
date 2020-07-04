@@ -11,11 +11,11 @@ print(t)
 
 tc = t.copy()
 
-s = t.speedups(index=1) # prod's index in t is 1
+s = t.speedups(ref=1) # prod's ref index in t is 1
 s.plot(logy=False, logx=True, save='speedups_by_prod.png')
 plt.close("all")
 
-st = t.scaled_timings(1) # prod's index in t is 1
+st = t.scaled_timings(1) # prod's ref index in t is 1
 st.plot(logy=False, logx=True, save='scaledtimings_by_prod.png')
 plt.close("all")
 

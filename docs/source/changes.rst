@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.0.3 (not released)
+--------------------
+
+Changes :
+
+- Added documentation support for lambdas.
+- Added matplotlib inline plot support.
+- Added different modes of argument for `speedups` and `scaled_timings` functions.
+- Set customized default `logy` values based on `BenchmarkObj` datatypes.
+- Added support for matplotlib backends other than `Qt5Agg` including notebook and inlining cases. Fix included a generic exception handling process to get fullscreen plots as is needed to put specifications as plot titles.
+
+Bug fixes :
+
+- `reset_columns` after `drop` works.
+
 0.0.2 (2020-05-19)
 ------------------
 

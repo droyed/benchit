@@ -4,11 +4,11 @@ import timeit
 import functools
 import warnings
 from tqdm import trange
-from benchit.plot_utils import _add_specs_as_title, _add_specs_as_textbox, _truncate_cmap
+from benchit.plot_utils import _add_specs_as_title, _truncate_cmap
 
 # Parameters
 _TIMEOUT = 0.2
-_NUM_REPEATS = 5
+_NUM_REPEATS = 1
 
 
 def _get_timings_perinput(funcs, input_=None):
@@ -377,38 +377,55 @@ class BenchmarkObj(object):
         self.dtype = dtype
         self.__cols = df_timings.columns
 
-    def scaled_timings(self, index):
+    def scaled_timings(self, ref):
         """
-        Evaluates scaled timings for all function calls with respect to one among them.
+        Evaluate scaled timings for all function calls with respect to one among them.
 
         Parameters
         ----------
-        index : int
-            Column ID of the reference function call in the input BenchmarkObj.
+        ref : int or str or function
+            Input value represents one of the headers in the input BenchmarkObj.
             The scaled timings for all function calls are computed with respect to
-            this reference column ID.
+            this reference.
 
         Returns
         -------
         BenchmarkObj
             Scaled timings.
         """
-        
+
         if self.dtype != 'timings':
-            raise AttributeError('scaled_timings is not applicable on '+self.dtype+' object')            
+            raise AttributeError('scaled_timings is not applicable on '+self.dtype+' object')
 
-        st = self.__df_timings.div(self.__df_timings.iloc[:, index], axis=0)
+        # Get timings dataframe
+        df = self.__df_timings
+
+        # Compute reference index
+        if isinstance(ref, int):
+            index = ref
+        elif type(ref) is str:
+            if ref not in df.columns:
+                raise ValueError("Invalid ref function string.")
+            index = df.columns.get_loc(ref)
+        elif hasattr(ref, '__name__'):
+            if ref.__name__ not in df.columns:
+                raise ValueError("Invalid ref function.")
+            index = df.columns.get_loc(ref.__name__)
+        else:
+            raise ValueError("Invalid ref value. Please check docs for valid ones.")
+
+        # Get scaled dataframe and hence the new BenchmarkObj
+        st = df.div(df.iloc[:, index], axis=0)
         st.rename({st.columns[index]: 'Ref:' + st.columns[index]}, axis=1, inplace=True)
-        stB = BenchmarkObj(st,'scaled_timings')
-        return stB
+        return BenchmarkObj(st, 'scaled_timings')
 
-    def speedups(self, index):
+    def speedups(self, ref):
         """
-        Evaluates speedups for all function calls with respect to one among them.
+        Evaluate speedups for all function calls with respect to one among them.
 
         Parameters
         ----------
-        index : int
+        ref : int or str or function
             Same as with scaled_timings.
 
         Returns
@@ -416,15 +433,14 @@ class BenchmarkObj(object):
         BenchmarkObj
             Speedups.
         """
-        
-        if self.dtype != 'timings':
-            raise AttributeError('speedups is not applicable on '+self.dtype+' object')            
-        
-        s = 1./BenchmarkObj.scaled_timings(self, index).to_dataframe()
-        sB = BenchmarkObj(s,'speedups')
-        return sB
 
-    def drop(self, labels, axis):
+        if self.dtype != 'timings':
+            raise AttributeError('speedups is not applicable on '+self.dtype+' object')
+
+        s = 1./BenchmarkObj.scaled_timings(self, ref).to_dataframe()
+        return BenchmarkObj(s, 'speedups')
+
+    def drop(self, labels, axis=1):
         """
         Drops functions off the benchmarking object based on column index numbers.
         It is an in-place operation.
@@ -499,10 +515,12 @@ class BenchmarkObj(object):
              colormap='jet',
              marker='',
              logx=False,
-             logy=True,
+             logy=None,
              grid=True,
              linewidth=2,
-             add_specs_as='title',
+             figsize = None,
+             specs_fontsize = None,
+             _FULLSCREENDEBUG = False,
              modules=None,
              save=None):
         """
@@ -522,14 +540,21 @@ class BenchmarkObj(object):
             String that decides the markers for plotting.
         logx : bool, optional
             Flag to set x-axis scale as log or linear.
-        logy : bool, optional
-            Flag to set y-axis scale as log or linear.
+        logy : None or bool, optional
+            If set as None, it detects default boolean flag using input Object datatype
+            to be used as logy argument for plotting that decides the y-axis scale.
+            With True and False, the scale is log and linear respectively.
+            If set as boolean, it is used directly as logy argument.
         grid : bool, optional
             Flag to show grid or not.
         linewidth : int, optional
             Width of line to be used for plotting.
-        add_specs_as : str, optional
-            Decides the position to add specs information.
+        figsize : tuple of two integers or None, optional
+            Tuple with syntax (figure_width, figure_height) for the figure window.
+        specs_fontsize : float or int or None, optional
+            Fontsize for specifications text displayed as title.
+        _FULLSCREENDEBUG : bool, optional
+            Flag to decide whether to display debug info on fullscreen showing of plot.
         modules : dict, optional
             Dictionary of modules.
         save : str or None, optional
@@ -548,14 +573,18 @@ class BenchmarkObj(object):
         if ylabel is None:
             ylabel_map = {'timings':'Runtime (s)', 'speedups':'Speedup (x)', 'scaled_timings':'Scaled Runtime (x)',}
             ylabel = ylabel_map[dtype]        
-    
+
+        if logy is None:
+            logy_map = {'timings': True, 'speedups': False, 'scaled_timings': False}
+            logy = logy_map[dtype]
+            
         if len(df) == 1 and logx:
             logx = False
             warnings.warn("Length of input dataframe is 1. Forcing it to linear scale for logx.")
             
         available_linestyles = ['-.','--','-']
         extls = np.resize(available_linestyles, df.shape[1]).tolist()
-        dfp = df.plot(style=extls, colormap=_truncate_cmap(colormap), logx=logx, logy=logy, linewidth=linewidth)
+        dfp = df.plot(style=extls, colormap=_truncate_cmap(colormap), logx=logx, logy=logy, linewidth=linewidth, figsize=figsize)
     
         if set_xticks_from_index:
             dfp.set_xticklabels(df.index)
@@ -574,14 +603,10 @@ class BenchmarkObj(object):
             dfp.set_xlabel(xlabel)
         if ylabel is not None:
             dfp.set_ylabel(ylabel)
-    
-        if add_specs_as == 'title':
-            _add_specs_as_title(dfp, modules=modules)
-        elif add_specs_as == 'textbox':
-            _add_specs_as_textbox(dfp, modules=modules)
-        else:
-            raise ValueError("Must be a string with value 'title' or 'textbox'")
-    
+
+        # Display in fullscreen and add specs as title
+        _add_specs_as_title(dfp, specs_fontsize=specs_fontsize, _FULLSCREENDEBUG=_FULLSCREENDEBUG, modules=modules)
+
         # Save axes plot as an image file
         if save is not None:
             dfp.figure.savefig(save, bbox_inches='tight')
@@ -589,8 +614,10 @@ class BenchmarkObj(object):
         return dfp
 
     def reset_columns(self):
-        """Resets columns to original order."""
-        self.__df_timings = self.__df_timings.loc[:,self.__cols]
+        """Reset columns to original order."""
+
+        reset_cols = [i for i in self.__cols if i in self.__df_timings.columns]
+        self.__df_timings = self.__df_timings.loc[:, reset_cols]
         return
 
     def to_dataframe(self, copy=False):
