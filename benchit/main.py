@@ -8,7 +8,7 @@ from benchit.plot_utils import _add_specs_as_title, _truncate_cmap
 
 # Parameters
 _TIMEOUT = 0.2
-_NUM_REPEATS = 1
+_NUM_REPEATS = 5
 
 
 def _get_timings_perinput(funcs, input_=None):
