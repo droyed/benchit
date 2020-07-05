@@ -102,7 +102,7 @@ Let's study the speedups of all w.r.t `prod` alongwith ranking :
 
 .. code-block:: python
 
-    >>> s = t.speedups(ref_func_by_index=1) # prod's index in t is 1
+    >>> s = t.speedups(ref=1) # prod's location index in t is 1
     >>> s.plot(logy=False, logx=True, save='speedups_by_prod.png')
 
 |speedups_by_prod|
@@ -111,10 +111,15 @@ Finally, the scaled-timings :
 
 .. code-block:: python
 
-    >>> st = t.scaled_timings(1) # prod's index in t is 1
+    >>> st = t.scaled_timings(ref=1) # prod's location index in t is 1
     >>> st.plot(logy=False, logx=True, save='scaledtimings_by_prod.png')
 
 |scaledtimings_by_prod|
+
+.. note::
+
+  The input argument to methods `speedups` and `scaled_timings` i.e. `ref` accepts three types of arguments for indexing - `int` as the location index, `str` as the function name string and `function` itself that was input into `funcs`.
+
 
 
 Features
