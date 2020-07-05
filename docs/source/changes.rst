@@ -1,8 +1,10 @@
 Changelog
 =========
 
-0.0.3 (not released)
---------------------
+0.0.3 (2020-07-05)
+------------------
+
+Focus has been to make plots work across different matplotlib backends and few other plot improvements.
 
 Changes :
 
