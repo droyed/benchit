@@ -116,9 +116,8 @@ Finally, the scaled-timings :
 
 |scaledtimings_by_prod|
 
-.. note::
 
-  The input argument to methods `speedups` and `scaled_timings` i.e. `ref` accepts three types of arguments for indexing - `int` as the location index, `str` as the function name string and `function` itself that was input into `funcs`.
+The input argument to methods `speedups` and `scaled_timings` i.e. `ref` accepts three types of arguments for indexing - `int` as the location index, `str` as the function name string and `function` itself that was input into `funcs`.
 
 
 
