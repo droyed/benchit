@@ -34,6 +34,9 @@ Plotting in IPython notebooks or Jupyter notebooks is supported for different `m
 Note that this could also be used for non-interactive backends for better visualization. `Matplotlib backends <https://matplotlib.org/faq/usage_faq.html#what-is-a-backend>`__ lists these backends and provides some general information on backends.
 
 
+`Sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
+
+
 .. toctree::
     PlotDemo-NotebookEnv
 
