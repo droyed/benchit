@@ -141,7 +141,7 @@ def _truncate_cmap(cmap, Y_thresh=0.65, start_offN=100):
 
 def _get_timings_perinput(funcs, input_=None):
     """
-    Evaluates function calls on a given input to compute the timings.
+    Evaluate function calls on a given input to compute the timings.
 
     Parameters
     ----------
@@ -192,7 +192,7 @@ def _get_timings_perinput(funcs, input_=None):
 
 def _get_timings(funcs, inputs=None, multivar=False):
     """
-    Evaluates function calls on given inputs to compute the timings.
+    Evaluate function calls on given inputs to compute the timings.
 
     Parameters
     ----------
@@ -232,7 +232,7 @@ def _get_timings(funcs, inputs=None, multivar=False):
 
 def _get_possible_indexbys(inputs):
     """
-    Given inputs in a list or dict gets the possible indexby arguments
+    Get the possible indexby arguments given inputs in a list or dict.
 
     Parameters
     ----------
@@ -295,8 +295,8 @@ def _get_params(in_, indexby):
 
     def _get_params_from_list(inputs, indexby):
         """
-        Given inputs in a list and indexby option, sets xticklabels and
-        indexby string based on type and format of inputs.
+        Set xticklabels and indexby string based on type and format of inputs,
+        given inputs in a list and indexby option.
 
         inputs : list
             Each elements of it represents one dataset each.
@@ -313,7 +313,7 @@ def _get_params(in_, indexby):
         """
 
         def f_shp(i):
-            """Format array shape info"""
+            """Format array shape info."""
             return i.replace('(', '').replace(')', '').replace(', ', 'x').replace(',', '')
 
         # Get input type and possible indexbys
@@ -356,8 +356,8 @@ def _get_params(in_, indexby):
 
     def _get_params_from_dict(in_):
         """
-        Given inputs in a dict, sets xticklabels and indexby string based on
-        type and format of inputs.
+        Set xticklabels and indexby string based on type and format of inputs,
+        given inputs in a dict.
 
         in_ : dict
             Each elements of it represents one dataset each.
@@ -394,7 +394,7 @@ def _get_params(in_, indexby):
 
 def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto'):
     """
-    Evaluates function calls on given input(s) to compute the timing.
+    Evaluate function calls on given input(s) to compute the timing.
     Puts out a dataframe-like object with the input properties being put into
     the header and index names and values.
 
@@ -642,7 +642,7 @@ class BenchmarkObj(object):
 
     def drop(self, labels, axis=1):
         """
-        Drops functions off the benchmarking object based on column index numbers.
+        Drop functions off the benchmarking object based on column index numbers.
         It is an in-place operation.
 
         Parameters
@@ -698,7 +698,7 @@ class BenchmarkObj(object):
 
     def copy(self):
         """
-        Makes a copy.
+        Make a copy.
 
         Returns
         -------
@@ -731,7 +731,7 @@ class BenchmarkObj(object):
              save=None,
              **kwargs):
         """
-        Plots dataframe using given input parameters.
+        Plot dataframe using given input parameters.
 
         Parameters
         ----------
@@ -839,7 +839,7 @@ class BenchmarkObj(object):
         return
 
     def to_dataframe(self, copy=False):
-        """Returns underlying pandas dataframe object."""
+        """Return underlying pandas dataframe object."""
 
         if not copy:
             return self.__df_timings

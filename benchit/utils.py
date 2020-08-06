@@ -31,7 +31,7 @@ def specs_str(modules=None):
 
 def _get_specsinfo():
     """
-    Gets system specifications.
+    Get system specifications.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def _get_specsinfo():
 
 def _get_module_version(mod):
     """
-    Gets module version from module.
+    Get module version from module.
 
     Parameters
     ----------
@@ -81,7 +81,7 @@ def _get_module_version(mod):
 
 def _get_module_versions(mods):
     """
-    Gets module versions from dict of modules.
+    Get module versions from dict of modules.
 
     Parameters
     ----------
