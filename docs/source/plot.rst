@@ -6,7 +6,7 @@ This is a brief discussion on various plotting schemes and tips that would be he
 Plot features
 -------------
 
-For most of the plotting purposes, we can stick to `benchit`'s `plot` method - c <https://benchit.readthedocs.io/en/latest/benchit.html#benchit.BenchmarkObj.plot>`__. This method enables `kwargs` to `pandas.DataFrame.plot <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.plot.html#pandas-dataframe-plot>`__ Also, `pandas.DataFrame.plot` has its own `kwargs` that traces back to `matplotlib.pyplot.plot <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot>`__. In essence, within `benchit`'s `plot` we can explore all plot arguments available to `pandas` and `matplotlib` plot versions. This should be sufficient for most plotting requirements.
+For most of the plotting purposes, we can stick to `benchit`'s `plot` method - `benchit.BenchmarkObj.plot <https://benchit.readthedocs.io/en/latest/benchit.html#benchit.BenchmarkObj.plot>`__. This method enables `kwargs` to `pandas.DataFrame.plot <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.plot.html#pandas-dataframe-plot>`__ Also, `pandas.DataFrame.plot` has its own `kwargs` that traces back to `matplotlib.pyplot.plot <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot>`__. In essence, within `benchit`'s `plot` we can explore all plot arguments available to `pandas` and `matplotlib` plot versions. This should be sufficient for most plotting requirements.
 
 To go the full hog, we can employ two more methods, which could be used individually or in combination.
 
