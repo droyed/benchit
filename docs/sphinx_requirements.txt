@@ -1,2 +1,0 @@
-nbsphinx==0.7.1
-Pygments==2.6.1

@@ -37,10 +37,6 @@ Note that this could also be used for non-interactive backends for better visual
 `Sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
 
 
-.. toctree::
-    PlotDemo-NotebookEnv
-
-
 Plot tips
 ---------
 
