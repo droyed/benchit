@@ -23,7 +23,7 @@ def fix_imgabspath(repo_url, in_str, branch='master'):
 author_url = 'https://github.com/droyed'
 package_name = "benchit"
 optional_dependencies = []
-development_dependencies = ["sphinx", "nbsphinx"]
+development_dependencies = ["sphinx"]
 maintainer_dependencies = ["twine"]
 tests_dependencies = ["networkx", "scikit-learn"],
 
