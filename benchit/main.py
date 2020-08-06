@@ -4,11 +4,124 @@ import timeit
 import functools
 import warnings
 from tqdm import trange
-from benchit.plot_utils import _add_specs_as_title, _truncate_cmap
+import colorsys
+import matplotlib
+import matplotlib.colors as colors
+import matplotlib.style as style
+import matplotlib.pyplot as plt
+from benchit.utils import specs_str
+
+style.use('fivethirtyeight')  # choose other styles from style.available
+warnings.simplefilter('always', UserWarning)
+
 
 # Parameters
 _TIMEOUT = 0.2
 _NUM_REPEATS = 5
+_ENVIRON = 'normal'
+
+
+def set_environ(environ='normal'):
+    global _ENVIRON
+
+    if environ not in ['notebook', 'normal']:
+        raise ValueError("Invalid environ value. Must be 'notebook' or 'normal'.")
+
+    if environ == 'notebook':
+        print('Notebook environment set! Use "fontsize" & "figsize" args with plot method for better viewing experience.')
+
+    _ENVIRON = environ
+    return
+
+
+def fullscreenfig(ax, pause_timefs, print_info=False):
+    """
+    Makes the current figure fullscreen.
+
+    Parameters
+    ----------
+    figManager : matplotlib backend FigureManager
+        Figure manager of the current figure.
+
+    Returns
+    -------
+    done : bool
+        Boolean flag that is True or False if full-screen worked or not respectively.
+        Note that for inlined plots on notebooks, this won't work.
+    status : str
+        Status message for debugging.
+    """
+
+    done = True
+    status = ''
+
+    figManager = plt.get_current_fig_manager()
+    backend = matplotlib.get_backend()
+
+    if backend in matplotlib.rcsetup.non_interactive_bk:
+        status = 'Backend is non-interactive. So no trials were made to fullscreen and hence no pause.'
+        info = {'done': False, 'status': status, 'backend': backend}
+    else:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                figManager.window.showMaximized()
+                status += '\nStatus : figManager.window.showMaximized worked.'
+            except Exception as errMsg:
+                status += '\nfigManager.window.showMaximized failed. Reason : ' + str(errMsg)
+                try:
+                    figManager.resize(*figManager.window.maxsize())
+                    status += '\nfigManager.resize worked.'
+                except Exception as errMsg:
+                    status += '\nfigManager.resize failed. Reason : ' + str(errMsg)
+                    try:
+                        figManager.full_screen_toggle()
+                        status += '\nfigManager.full_screen_toggle worked.'
+                    except Exception as errMsg:
+                        status += '\nfigManager.full_screen_toggle failed; no fullscreen applied. Reason : ' + str(errMsg)
+                        done = False
+
+            # Pause before the screen becomes fullscreen
+            try:
+                plt.pause(interval=pause_timefs)
+            except Exception as errMsg:
+                status += '\nPause failed. Reason : ' + str(errMsg)
+
+            info = {'done': done, 'status': status, 'backend': backend}
+            if print_info:
+                print('=> Fullscreen debug status : ' + info['status'])
+                print('=> Backend : ' + info['backend'])
+                print('=> Fullscreen done : ' + str(info['done']))
+
+    return info
+
+
+def _truncate_cmap(cmap, Y_thresh=0.65, start_offN=100):
+    """
+    Truncate colormap so that we avoid a certain range of Y values in YIQ color space.
+
+    Parameters
+    ----------
+    cmap : str
+        Colormap string.
+    Y_thresh : int, optional
+        Y threshold value.
+    start_offN : int, optional
+        Starting number of levels.
+
+    Returns
+    -------
+    matplotlib.colors.LinearSegmentedColormap
+        Truncated colormap.
+    """
+
+    cmap_func = plt.get_cmap(cmap)
+    allcolors = cmap_func(np.linspace(0., 1., start_offN))
+    mask = np.array([colorsys.rgb_to_yiq(*c[:-1])[0] <= Y_thresh for c in allcolors])
+    if ~mask.any():
+        return cmap  # not truncated
+    else:
+        return colors.LinearSegmentedColormap.from_list('trunc_cmap', allcolors[mask])
 
 
 def _get_timings_perinput(funcs, input_=None):
@@ -36,7 +149,14 @@ def _get_timings_perinput(funcs, input_=None):
     """
 
     timings_l = []
-    for j in trange(len(funcs), desc='Loop functions', leave=False):
+
+    from IPython import get_ipython
+    if get_ipython() is None:
+        iter_funcs = trange(len(funcs), desc='Loop functions', leave=False)
+    else:
+        iter_funcs = range(len(funcs))
+
+    for j in iter_funcs:
         f = funcs[j]
         ii = 1
         process_next = True
@@ -323,9 +443,10 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     benchObj = BenchmarkObj(df_timings)
     return benchObj
 
+
 def bench(df, dtype='t', copy=False):
     """
-    Constructor function for creating BenchmarkObj object from a pandas dataframe. 
+    Constructor function for creating BenchmarkObj object from a pandas dataframe.
     With input arguments, it could set as a timings or speedups or scaled-timings object.
     Additionally, the dataframe could be copied so that source dataframe stays unaffected.
 
@@ -333,36 +454,100 @@ def bench(df, dtype='t', copy=False):
     ----------
     df : pandas dataframe
         Dataframe listing the timings or speedups or scaled-timings or just any 2D data,
-        i.e. number of levels with rows and columns is 1. 
+        i.e. number of levels with rows and columns is 1.
         Also, the dataframe should have the benchmarking information setup in the standardized setup way.
         Columns represent function names, alongwith df.columns.name assigned as 'Functions'.
-        Index values represent dataset IDs, alongwith df.index.name assigned based on dataset type.           
+        Index values represent dataset IDs, alongwith df.index.name assigned based on dataset type.
     dtype : str, optional
         Datatype value that decides between timings or speedups or scaled-timings.
         Mapping strings are : 't' -> timings, 'st' -> scaled-timings, 's' -> speedups.
     copy : bool, optional
-        Decides whether to copy data when constructing benchamrking object.        
+        Decides whether to copy data when constructing benchamrking object.
 
     Returns
     -------
     BenchmarkObj
         Data stored in BenchmarkObj.
-        
+
     """
-    
-    map_dtype = {'t':'timings', 's':'speedups', 'st':'scaled_timings'}
+
+    map_dtype = {'t': 'timings', 's': 'speedups', 'st': 'scaled_timings'}
     if dtype in map_dtype:
         dt = map_dtype[dtype]
     elif dtype in map_dtype.values():
         dt = dtype
     else:
-        raise TypeError('data type ' + '"' + str(dtype) + '" not understood')        
+        raise TypeError('data type ' + '"' + str(dtype) + '" not understood')
 
     if not copy:
         return BenchmarkObj(df, dtype=dt)
     else:
         return BenchmarkObj(df.copy(), dtype=dt)
-    
+
+
+def _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize, label_fontsize, legend_fontsize, specs_position, dpi):
+    global _ENVIRON
+
+    if specs_fontsize is None:
+        specs_fontsize = fontsize
+    if tick_fontsize is None:
+        tick_fontsize = fontsize
+    if label_fontsize is None:
+        label_fontsize = fontsize
+    if legend_fontsize is None:
+        legend_fontsize = fontsize
+
+    custom_params = {'axes.titlelocation': ('specs_position', specs_position),
+                     'axes.labelweight': ('axes_labelweight', 'bold'),
+                     'axes.titlesize': ('specs_fontsize', specs_fontsize),
+                     'axes.labelsize': ('label_fontsize', label_fontsize),
+                     'figure.dpi': ('dpi', dpi),
+                     'legend.fontsize': ('legend_fontsize', legend_fontsize),
+                     'legend.title_fontsize': ('legend_title_fontsize', legend_fontsize),
+                     'figure.constrained_layout.use': ('figure_constrained_layout_use', _ENVIRON == 'normal')}
+
+    skip_names = ['legend.title_fontsize']
+    for (i, (j0, j1)) in custom_params.items():
+        if j1 is not None:
+            if i in plt.rcParams:
+                plt.rcParams.update({i: j1})
+            elif i not in skip_names:
+                msg = 'Attribute ' + i + ' is not found in matplotlib rcParams. Hence, ' + j0 + ' is not set.'
+                msg += ' Using default rcParams value.'
+                warnings.warn(msg, stacklevel=2)
+    return tick_fontsize
+
+
+def _xticks_info_from_df(df):
+    xticklabels = df.index
+
+    idx = np.array(df.index)
+    d = idx.dtype
+    if np.issubdtype(d, np.floating) or np.issubdtype(d, np.integer):
+        xticks = df.index
+    else:
+        warnings.warn("Invalid index for use as plot xticks. Using range as the default xticks.")
+        xticks = range(len(df))
+
+    return xticklabels, xticks
+
+
+def _get_plotparams_from_obj(df, dtype, logx, logy, ylabel):
+    if ylabel is None:
+        ylabel_map = {'timings': 'Runtime (s)', 'speedups': 'Speedup (x)', 'scaled_timings': 'Scaled Runtime (x)'}
+        ylabel = ylabel_map[dtype]
+
+    if logy is None:
+        logy_map = {'timings': True, 'speedups': False, 'scaled_timings': False}
+        logy = logy_map[dtype]
+
+    if len(df) == 1 and logx:
+        logx = False
+        warnings.warn("Length of input dataframe is 1. Forcing it to linear scale for logx.")
+
+    xticklabels, xticks = _xticks_info_from_df(df)
+    return logx, logy, ylabel, xticklabels, xticks
+
 
 class BenchmarkObj(object):
     """
@@ -395,7 +580,7 @@ class BenchmarkObj(object):
         """
 
         if self.dtype != 'timings':
-            raise AttributeError('scaled_timings is not applicable on '+self.dtype+' object')
+            raise AttributeError('scaled_timings is not applicable on ' + self.dtype + ' object')
 
         # Get timings dataframe
         df = self.__df_timings
@@ -435,9 +620,9 @@ class BenchmarkObj(object):
         """
 
         if self.dtype != 'timings':
-            raise AttributeError('speedups is not applicable on '+self.dtype+' object')
+            raise AttributeError('speedups is not applicable on ' + self.dtype + ' object')
 
-        s = 1./BenchmarkObj.scaled_timings(self, ref).to_dataframe()
+        s = 1. / BenchmarkObj.scaled_timings(self, ref).to_dataframe()
         return BenchmarkObj(s, 'speedups')
 
     def drop(self, labels, axis=1):
@@ -454,31 +639,31 @@ class BenchmarkObj(object):
         None
             NA.
         """
-        df = self.__df_timings        
-        self.__df_timings = df.drop(labels,axis=axis)
+        df = self.__df_timings
+        self.__df_timings = df.drop(labels, axis=axis)
         return
-                
+
     def rank(self, mode='range'):
         """
         Rank different functions based on their performance number and rank them by
         changing the columns order accordingly. It is an in-place operation.
-    
+
         Parameters
         ----------
         mode : str, optional
             Sets the ranking criteria to rank different functions.
-            It must be one among - 'range', 'constant', 'index'.        
-            
+            It must be one among - 'range', 'constant', 'index'.
+
         Returns
         -------
         None
             NA.
         """
-                     
-        df = self.__df_timings                
-        
+
+        df = self.__df_timings
+
         if mode == 'range':
-            R = np.arange(1,len(df)+1)
+            R = np.arange(1, len(df) + 1)
         elif mode == 'constant':
             R = np.ones(len(df))
         elif mode == 'index':
@@ -490,42 +675,49 @@ class BenchmarkObj(object):
                 raise ValueError("Dataframe index is not int or float. Hence, 'index' is an invalid option as mode.")
         else:
             raise ValueError("Invalid option as mode.")
-    
-        df_ranked = df.iloc[:,R.dot(df).argsort()[::-1]]
+
+        df_ranked = df.iloc[:, R.dot(df).argsort()[::-1]]
         df[:] = df_ranked
         df.columns = df_ranked.columns
         return
 
     def copy(self):
         """
-        Makes a copy.        
-            
+        Makes a copy.
+
         Returns
         -------
         BenchmarkObj
             Copy of input BenchmarkObj object.
         """
-        
+
         return BenchmarkObj(self.__df_timings.copy(), self.dtype)
 
-        
     def plot(self, set_xticks_from_index=True,
              xlabel=None,
              ylabel=None,
              colormap='jet',
-             marker='',
              logx=False,
              logy=None,
              grid=True,
              linewidth=2,
-             figsize = None,
-             specs_fontsize = None,
-             debug_plotfs = False,
+             rot=None,
+             dpi=None,
+             fontsize=14,
+             specs_fontsize=None,
+             tick_fontsize=None,
+             label_fontsize=None,
+             legend_fontsize=None,
+             figsize=None,
+             specs_position='left',
+             debug_plotfs=False,
+             pause_timefs=0.1,
              modules=None,
-             save=None):
+             save=None,
+             **kwargs):
         """
         Plots dataframe using given input parameters.
-    
+
         Parameters
         ----------
         set_xticks_from_index : bool, optional
@@ -536,8 +728,6 @@ class BenchmarkObj(object):
             Ylabel string.
         colormap : str, optional
             String that decides the colormap for plotting
-        marker : str, optional
-            String that decides the markers for plotting.
         logx : bool, optional
             Flag to set x-axis scale as log or linear.
         logy : None or bool, optional
@@ -549,69 +739,82 @@ class BenchmarkObj(object):
             Flag to show grid or not.
         linewidth : int, optional
             Width of line to be used for plotting.
-        figsize : tuple of two integers or None, optional
-            Tuple with syntax (figure_width, figure_height) for the figure window.
+        rot : int or None, optional
+            Rotation for ticks (xticks for vertical, yticks for horizontal plots).
+        dpi : float or None, optional
+            The resolution of the figure in dots-per-inch.
+        fontsize : float or int or None, optional
+            Fontsize used across specs_fontsize, tick_fontsize and label_fontsize if they are not set.
         specs_fontsize : float or int or None, optional
             Fontsize for specifications text displayed as title.
+        tick_fontsize : float or int or None, optional
+            Fontsize for xticks and yticks.
+        label_fontsize : float or int or None, optional
+            Fontsize for xlabel and ylabel.
+        figsize : tuple of two integers or None, optional
+            Tuple with syntax (figure_width, figure_height) for the figure window.
+            This is applied only for environemnts where full-screen viewing is not possible.
+        specs_position : None or str, optional
+            str that decides where to print specs information.
+            Options are : None(default), 'left', 'right' and 'center'.
         debug_plotfs : bool, optional
             Flag to decide whether to display debug info on fullscreen showing of plot.
+            This is used only for interactive backends.
+        pause_timefs : float, optional
+            This is a pause number in seconds, used for plot to be rendered in fullscreen before saving it.
         modules : dict, optional
             Dictionary of modules.
         save : str or None, optional
             Path to save plot.
-    
+        **kwargs
+            Options to pass to pandas plot method, including kwargs for matplotlib plotting method.
+
         Returns
         -------
         matplotlib.axes._subplots.AxesSubplot
             Plot of data from object's dataframe.
         """
-    
-        # Get dataframe and dtype        
-        dtype = self.dtype                
-        df = self.__df_timings  
-        
-        if ylabel is None:
-            ylabel_map = {'timings':'Runtime (s)', 'speedups':'Speedup (x)', 'scaled_timings':'Scaled Runtime (x)',}
-            ylabel = ylabel_map[dtype]        
 
-        if logy is None:
-            logy_map = {'timings': True, 'speedups': False, 'scaled_timings': False}
-            logy = logy_map[dtype]
-            
-        if len(df) == 1 and logx:
-            logx = False
-            warnings.warn("Length of input dataframe is 1. Forcing it to linear scale for logx.")
-            
-        available_linestyles = ['-.','--','-']
+        # Get dataframe and dtype
+        dtype = self.dtype
+        df = self.__df_timings
+
+        # Get plot params
+        # ylabel is sure to be assigned to something not None
+        logx, logy, ylabel, xticklabels, xticks = _get_plotparams_from_obj(df, dtype, logx, logy, ylabel)
+
+        available_linestyles = ['-.', '--', '-']
         extls = np.resize(available_linestyles, df.shape[1]).tolist()
-        dfp = df.plot(style=extls, colormap=_truncate_cmap(colormap), logx=logx, logy=logy, linewidth=linewidth, figsize=figsize)
-    
-        if set_xticks_from_index:
-            dfp.set_xticklabels(df.index)
-    
-            idx = np.array(df.index)
-            d = idx.dtype
-            if np.issubdtype(d, np.floating) or np.issubdtype(d, np.integer):
-                dfp.set_xticks(df.index)
-            else:
-                warnings.warn("Invalid index for use as plot xticks. Using range as the default xticks.")
-                dfp.set_xticks(range(len(df)))
-    
-        if grid:
-            dfp.grid(True, which="both", ls="-")
-        if xlabel is not None:
-            dfp.set_xlabel(xlabel)
-        if ylabel is not None:
-            dfp.set_ylabel(ylabel)
 
-        # Display in fullscreen and add specs as title
-        _add_specs_as_title(dfp, specs_fontsize=specs_fontsize, debug_plotfs=debug_plotfs, modules=modules)
+        tick_fontsize = _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize, label_fontsize, legend_fontsize, specs_position, dpi)
+
+        # Plot using dataframe data and its attributes
+        ax = df.plot(style=extls,
+                     colormap=_truncate_cmap(colormap),
+                     title=specs_str(modules=modules),
+                     rot=rot,
+                     fontsize=tick_fontsize,
+                     linewidth=linewidth,
+                     logx=logx,
+                     logy=logy,
+                     figsize=figsize,
+                     **kwargs)
+
+        if grid:
+            ax.grid(True, which="both", ls="-")
+        if xlabel is not None:
+            ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        if set_xticks_from_index:
+            ax.set_xticklabels(xticklabels)
+            ax.set_xticks(xticks)
 
         # Save axes plot as an image file
+        fullscreenfig(ax, pause_timefs, print_info=debug_plotfs)
         if save is not None:
-            dfp.figure.savefig(save, bbox_inches='tight')
-    
-        return dfp
+            ax.figure.savefig(save, bbox_inches='tight')
+        return ax
 
     def reset_columns(self):
         """Reset columns to original order."""
@@ -627,7 +830,7 @@ class BenchmarkObj(object):
             return self.__df_timings
         else:
             return self.__df_timings.copy()
-    
+
     def __str__(self):
         return repr(self.__df_timings)
 

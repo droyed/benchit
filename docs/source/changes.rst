@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.0.4 (2020-08-06)
+--------------------
+
+Changes :
+
+- Progress bar fix for IPython/notebook runs to limit them to loop for datasets only.
+- Documentation re-organized to show the minimal workflow and features separately.
+- Introduced `set_environ` to set parameters for plotting, etc. according to `matplotlib` backend.
+- Plot code reorganised to use specifications as title at dataframe plot level. This has helped in having an universal code to work for all backends. Makes use of `matplotlib` `rcparams` to setup environment before invoking dataframe plot method. The inspiration has been with notebook plotting. This has led to code cleanup to push more work in `main.py`.
+- Owing to previous change, now deprecated `_add_specs_as_title`, `_add_specs_as_textbox`.
+
+
 0.0.3 (2020-07-05)
 ------------------
 

@@ -51,7 +51,7 @@ for USE_INPUT_AS_DICT in [False, True]:
 
         print_inputs(v)
         
-        all_possible_indexbys = benchit._get_possible_indexbys(v)
+        all_possible_indexbys = benchit.main._get_possible_indexbys(v)
         print("'auto' Indexby (applicable when not a dict, otherwise it's keys) : " + all_possible_indexbys[0] + ". All other possible indexbys : " + str(all_possible_indexbys))
         print("Output for each indexby value :")
         for o in ['auto','len','shape','size','item','scalar']:

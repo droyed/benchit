@@ -1,105 +1,33 @@
-import matplotlib
+from collections import OrderedDict
+import importlib
+from types import ModuleType
 import multiprocessing
 import platform
-import sys
 from cpuinfo import get_cpu_info
 from psutil import virtual_memory
-from types import ModuleType
-import importlib
-from collections import OrderedDict
-import numpy as np
-import matplotlib.colors as colors
-import colorsys
-import matplotlib.style as style
-style.use('fivethirtyeight')  # choose other styles from style.available
-import matplotlib.pyplot as plt
 
 
-def _add_specs_as_title(ax, specs_fontsize=None, debug_plotfs=False, modules=None):
+def specs_str(modules=None):
     """
-    Adds title with system specifications into an axes plot.
+    Get plot specifications as a string for use as plot title.
 
     Parameters
     ----------
-    ax : AxesSubplot
-        Plot into which the title is to be inserted.
-    specs_fontsize : float or int or None, optional
-            Fontsize for specifications text displayed as title.
-    debug_plotfs : bool, optional
-            Boolean flag to decide to show debug information on plot full-screen show.
     modules : dict
         Dictionary of modules.
 
     Returns
     -------
-    None
-        NA.
+    str
+        Specs information as a string.
     """
-    
-    figManager = plt.get_current_fig_manager()
-    done, status = _full_screen_or_toggle(figManager)
-    if debug_plotfs:
-        print('Fullscreen debug status : '+status)
-        print('Backend : '+matplotlib.get_backend())    
-        print('Fullscreen done : '+str(done))
-    
-    if specs_fontsize is None:
-        specs_fontsize = ax.get_xticklabels()[0].get_fontsize()
-    
-    plt.pause(0.001)
 
-    # Get plot specifications
     p1, p2, p3 = _latex_formatted_specsinfo(modules=modules)
     L = max([len(i) for i in [p1, p2]])
     p3_split = _splitstr(p3, L)
-    p3_split = [s.strip() for s in p3_split]    
-    plt_specsinfo = "\n".join([p1, p2] + p3_split)
-    
-    # Set specs as title and show
-    ax.set_title(plt_specsinfo, loc='left', fontsize=specs_fontsize)
-    plt.pause(0.001)
-    plt.show(block=False)    
-    return ax
+    p3_split = [s.strip() for s in p3_split]
+    return "\n".join([p1, p2] + p3_split)
 
-
-def _full_screen_or_toggle(figManager):
-    """
-    Makes the current figure fullscreen.
-
-    Parameters
-    ----------
-    figManager : matplotlib backend FigureManager
-        Figure manager of the current figure.
-        
-    Returns
-    -------
-    done : bool
-        Boolean flag that is True or False if full-screen worked or not respectively.
-        Note that for inlined plots on notebooks, this won't work.
-    status : str
-        Status message for debugging.
-    """
-
-    done = True
-    status = ''
-    try:
-        figManager.window.showMaximized()
-        status += '\nStatus : figManager.window.showMaximized worked.'
-    except Exception as errMsg:
-        status += '\nfigManager.window.showMaximized failed. Reason : '+str(errMsg)
-        try:
-            figManager.resize(*figManager.window.maxsize())
-            status += '\nfigManager.resize worked.'
-        except Exception as errMsg:
-            status += '\nfigManager.resize failed. Reason : '+str(errMsg)
-            try:
-                figManager.full_screen_toggle()  
-                status += '\nfigManager.full_screen_toggle worked.' 
-            except Exception as errMsg:
-                status += '\nfigManager.full_screen_toggle failed; no fullscreen applied. Reason : '+str(errMsg)
-                done = False
-    
-    return done, status
 
 def _get_specsinfo():
     """
@@ -125,7 +53,6 @@ def _get_specsinfo():
         CPU_brand = 'CPU - NA'
     return OrderedDict([('CPU', CPU_brand + ', ' + str(multiprocessing.cpu_count()) + ' Cores'),
                         ('Memory (GB)', str(round(virtual_memory().total / 1024.**3, 1))),
-                        ('ByteOrder', sys.byteorder.capitalize()),
                         ('Kernel-OS', platform.platform()),
                         ('Python', platform.python_version())])
 
@@ -224,7 +151,7 @@ def _latex_formatted_specsinfo(modules=None):
 
     d = _get_specsinfo()
     cpu = _bold_latex("CPU :") + d['CPU'] + '  ' + _bold_latex("Mem (GB) :") +\
-        d['Memory (GB)'] + '  ' + _bold_latex("ByteO :") + d['ByteOrder']
+        d['Memory (GB)']
     kernel_os = _bold_latex("Kernel, OS : ") + d['Kernel-OS']
     python_modules = _bold_latex("Python : ") + d['Python']
     if modules is not None:
@@ -296,31 +223,3 @@ def extract_modules_from_globals(glb, mode='valid'):
         return [l for l in unq_modules if not l.__name__.startswith('_')]
     else:
         return Exception('Wrong argument for mode!')
-
-
-def _truncate_cmap(cmap, Y_thresh=0.65, start_offN = 100):
-    """
-    Truncate colormap so that we avoid a certain range of Y values in YIQ color space.
-
-    Parameters
-    ----------
-    cmap : str
-        Colormap string.
-    Y_thresh : int, optional
-        Y threshold value.
-    start_offN : int, optional
-        Starting number of levels.
-
-    Returns
-    -------
-    matplotlib.colors.LinearSegmentedColormap
-        Truncated colormap.
-    """
-
-    cmap_func = plt.get_cmap(cmap)
-    allcolors = cmap_func(np.linspace(0., 1., start_offN))
-    mask = np.array([colorsys.rgb_to_yiq(*c[:-1])[0]<=Y_thresh for c in allcolors])
-    if ~mask.any():
-        return cmap # not truncated
-    else:
-        return colors.LinearSegmentedColormap.from_list('trunc_cmap', allcolors[mask])

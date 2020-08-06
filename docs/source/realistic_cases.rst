@@ -1,5 +1,5 @@
-Realistic cases
-================
+Real-world examples
+===================
 
 We will take few realistic scenarios and also study how arguments could be setup differently.
 

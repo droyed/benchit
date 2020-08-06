@@ -71,6 +71,15 @@ Let's consider a setup where functions accept more than one argument. Let's take
 |readme_2_timings|
 
 
+Plotting on notebooks?
+^^^^^^^^^^^^^^^^^^^^^^
+
+Simply use `benchit.set_environ('notebook')` before plotting.
+
+Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
+
+
+
 
 .. |Docs| image:: https://readthedocs.org/projects/benchit/badge/?version=latest
     :target: https://benchit.readthedocs.io/en/latest/?badge=latest

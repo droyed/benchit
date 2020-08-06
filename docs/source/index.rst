@@ -58,7 +58,9 @@ Benchit - Contents
 
    intro
    workflow
+   features
    realistic_cases
+   plot
    changes
    benchit
 
