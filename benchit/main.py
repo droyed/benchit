@@ -22,6 +22,21 @@ _ENVIRON = 'normal'
 
 
 def set_environ(environ='normal'):
+    """
+    Set environemnt.
+
+    Parameters
+    ----------
+    environ : str, optional
+        String that sets up environment given the current setup with global variable _ENVIRON.
+
+    Returns
+    -------
+    None
+        NA.
+
+    """
+
     global _ENVIRON
 
     if environ not in ['notebook', 'normal']:
@@ -36,7 +51,7 @@ def set_environ(environ='normal'):
 
 def fullscreenfig(ax, pause_timefs, print_info=False):
     """
-    Makes the current figure fullscreen.
+    Make the current figure fullscreen.
 
     Parameters
     ----------
