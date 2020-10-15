@@ -949,58 +949,6 @@ class BenchmarkObj(object):
 
         return BenchmarkObj(self.__df_timings.copy(), dtype=self.dtype, multivar=self.multivar, multiindex=self.multiindex)
 
-    def ploto(self, set_xticks_from_index=True,
-              xlabel=None,
-              ylabel=None,
-              colormap='jet',
-              logx=False,
-              logy=None,
-              grid=True,
-              linewidth=2,
-              rot=None,
-              dpi=None,
-              fontsize=14,
-              specs_fontsize=None,
-              tick_fontsize=None,
-              label_fontsize=None,
-              legend_fontsize=None,
-              figsize=None,
-              specs_position='left',
-              debug_plotfs=False,
-              pause_timefs=0.1,
-              modules=None,
-              save=None,
-              **kwargs):
-
-        dtype = self.dtype
-        df = self.__df_timings
-        logx, logy, ylabel, xticklabels, xticks = _get_plotparams_from_obj(df, dtype, logx, logy, ylabel)
-        available_linestyles = ['-.', '--', '-']
-        extls = np.resize(available_linestyles, df.shape[1]).tolist()
-        ax = df.plot(style=extls,
-                     colormap=_truncate_cmap(colormap),
-                     title=specs(modules=modules),
-                     rot=rot,
-                     fontsize=fontsize,
-                     linewidth=linewidth,
-                     logx=logx,
-                     logy=logy,
-                     figsize=figsize,
-                     **kwargs)
-
-        if grid:
-            ax.grid(True, which="both", ls="-")
-        if xlabel is not None:
-            ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-
-        if set_xticks_from_index:
-            ax.set_xticklabels(xticklabels)
-            ax.set_xticks(xticks)
-
-        fullscreenfig(ax, pause_timefs, print_info=debug_plotfs)
-        return ax
-
     def plot(self, set_xticks_from_index=True,
              xlabel=None,
              ylabel=None,
