@@ -32,7 +32,7 @@ import benchit
 #%matplotlib inline
 
 ## Un-comment for notebook specific and non-interactive backend runs
-#benchit.set_environ('notebook')
+#benchit.setparams(environ='notebook')
 
 import matplotlib
 

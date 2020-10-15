@@ -28,7 +28,7 @@ Plotting in IPython notebooks or Jupyter notebooks is supported for different `m
 
 .. code-block:: python
 
-    benchit.set_environ('notebook')
+    benchit.setparams(environ='notebook')
 
 
 Note that this could also be used for non-interactive backends for better visualization. `Matplotlib backends <https://matplotlib.org/faq/usage_faq.html#what-is-a-backend>`__ lists these backends and provides some general information on backends.

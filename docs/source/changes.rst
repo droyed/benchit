@@ -9,6 +9,7 @@ Changes :
 - Changes were applied at various levels to accommodate multiple arguments input with combinations cases mostly generated through nested loops over those arguments. Such combinations are led to generate subplots. This sub-plotting workflow is integrated to usual plotting mechanism to provide a one-stop solution. As such, the interface to the user stays the same, but with additional feature of sub-plotting for the combinations case.
 - New one-line `specs` information.
 - Framing feature added for plotting.
+- Now we can quickly check out the layout and a general plot trend with a new function named `setparams`. This also replaces old function named 'set_environ', as we have few more arguments added to it.
 
 Bug fixes :
 
