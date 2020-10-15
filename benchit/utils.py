@@ -10,7 +10,7 @@ import re
 
 def specs_short():
     """
-    Get short-formatted one-line specifications as a string for use as plot title.
+    Get short-formatted one-line specifications as a string.
 
     Parameters
     ----------
