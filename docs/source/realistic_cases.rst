@@ -69,19 +69,30 @@ Also, we will explore subplot specific arguments available with `plot`. These ar
 .. code-block:: python
 
     >>> R = np.random.rand
-    >>> in_ = {(n,W):[R(n,W), R(n,W)] for n in [10, 100, 500, 1000] for W in [3, 5, 8, 10, 20, 50, 80, 100]}
+    >>> nrows_list = [10, 100, 500, 1000]  # list of number of rows
+    >>> ncols_list = [3, 5, 8, 10, 20, 50, 80, 100]  # list of number of cols
+    >>> in_ = {(nr,nc):[R(nr,nc), R(nr,nc)] for nr in nrows_list for nc in ncols_list}
     >>> t = benchit.timings(fns, in_, multivar=True, input_name=['nrows', 'ncols'])
-    >>> t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g', save='multigrp_id0_euclidean_timings.png')
-    >>> t.plot(logx=True, sp_ncols=2, sp_argID=1, sp_sharey='g', save='multigrp_id1_euclidean_timings.png') 
 
+Now, let's do the groupings to study the behaviour w.r.t. to each argument.
 
 Grouping based on `argID = 0` :
+
+.. code-block:: python
+
+    >>> t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g', save='multigrp_id0_euclidean_timings.png')
 
 |multivar_euclidean_timings_grp0|
 
 Grouping based on `argID = 1` :
 
+.. code-block:: python
+
+    >>> t.plot(logx=True, sp_ncols=2, sp_argID=1, sp_sharey='g', save='multigrp_id1_euclidean_timings.png') 
+
 |multivar_euclidean_timings_grp1|
+
+Some interesting obseravtions could be made there. The implementations are obviously different. This is resulting in `pairwise_distances` winning as we move to higher number of columns. Though, on smaller datasets or with smaller number of rows, `cdist` is clearly ahead.
 
 No argument
 -----------
