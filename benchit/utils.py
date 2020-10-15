@@ -9,6 +9,19 @@ import re
 
 
 def specs_short():
+    """
+    Get short-formatted one-line specifications as a string for use as plot title.
+
+    Parameters
+    ----------
+    None
+        NA
+    Returns
+    -------
+    str
+        Specs information as a one-line string.
+    """
+
     cpuinfo_ = get_cpu_info()
     if 'brand' in cpuinfo_:
         CPU_brand = cpuinfo_['brand']
@@ -29,7 +42,7 @@ def specs_short():
 
 def specs(modules=None):
     """
-    Get plot specifications as a string for use as plot title.
+    Get specifications as a string for use as plot title.
 
     Parameters
     ----------
