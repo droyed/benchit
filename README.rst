@@ -73,7 +73,7 @@ Let's consider a setup where functions accept more than one argument. Let's take
 Multiple arguments with groupings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We will extend the previous example to make the second argument a variable too and study the trend as we vary the number of columns.
+We will extend the previous example to make the second argument a variable too and study the trend as we vary the number of columns, resulting in subplots.
 
 .. code-block:: python
 
@@ -86,6 +86,8 @@ We will extend the previous example to make the second argument a variable too a
 For plotting, we are using number of rows as the x-axis base.
 
 |readme_3_timings|
+
+Use `sp_argID=1` to switch-over to use number of cols as the x-axis base instead.
 
 Quick Tips
 ----------
