@@ -23,7 +23,7 @@ _ENVIRON = 'normal'
 
 def setparams(timeout=0.2, rep=5, environ='normal'):
     """
-    Set environemnt.
+    Set parameters for benchit.
 
     Parameters
     ----------
