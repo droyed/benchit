@@ -59,8 +59,8 @@ We will study another multiple argument case. The setup involves `euclidean dist
     
 |multivar_euclidean_timings|
 
-Multivar-groupings
-^^^^^^^^^^^^^^^^^^
+Multi-variable Groupings
+""""""""""""""""""""""""
 
 We will simply extend previous test-case to cover for the second argument to the distance functions, i.e. with varying number of columns. We will re-use most of that earlier setup.
 
