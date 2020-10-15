@@ -9,9 +9,9 @@ import matplotlib
 import matplotlib.colors as colors
 import matplotlib.style as style
 import matplotlib.pyplot as plt
-from benchit.utils import specs_str
+from benchit.utils import specs, specs_short
 
-style.use('fivethirtyeight')  # choose other styles from style.available
+style.use('fivethirtyeight')
 warnings.simplefilter('always', UserWarning)
 
 
@@ -21,12 +21,16 @@ _NUM_REPEATS = 5
 _ENVIRON = 'normal'
 
 
-def set_environ(environ='normal'):
+def setparams(timeout=0.2, rep=5, environ='normal'):
     """
     Set environemnt.
 
     Parameters
     ----------
+    timeout : float or int, optional
+        Sets up timeout while looping with timeit that decides when to exit benchmarking for current iteration setup.
+    rep : float or int, optional
+        Sets up number of repetitions as needed to select the best timings among them as final runtime number for current iteration setup.
     environ : str, optional
         String that sets up environment given the current setup with global variable _ENVIRON.
 
@@ -37,6 +41,8 @@ def set_environ(environ='normal'):
 
     """
 
+    global _TIMEOUT
+    global _NUM_REPEATS
     global _ENVIRON
 
     if environ not in ['notebook', 'normal']:
@@ -45,6 +51,8 @@ def set_environ(environ='normal'):
     if environ == 'notebook':
         print('Notebook environment set! Use "fontsize" & "figsize" args with plot method for better viewing experience.')
 
+    _TIMEOUT = timeout
+    _NUM_REPEATS = rep
     _ENVIRON = environ
     return
 
@@ -162,6 +170,9 @@ def _get_timings_perinput(funcs, input_=None):
         https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat
 
     """
+
+    global _TIMEOUT
+    global _NUM_REPEATS
 
     timings_l = []
 
@@ -428,6 +439,9 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
 
     """
 
+    # Default params
+    multiindex = False
+
     # Setup label parameters
     if multivar and not isinstance(inputs, dict):
         indexby = 'item'
@@ -450,16 +464,232 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     else:
         df_timings.index = xticklabels
 
-    if input_name is not None:
-        df_timings.index.name = input_name
+    # Multivar additions for v005 to setup df_timings.index.name
+    if isinstance(input_name, list) or isinstance(input_name, tuple):
+        input_name_type = 'list_or_tuple'
+    elif isinstance(input_name, str):
+        input_name_type = 'str'
     else:
-        df_timings.index.name = xlabel_from_inputs
+        input_name_type = None
 
-    benchObj = BenchmarkObj(df_timings)
+    df_nlevels = df_timings.index.nlevels
+    if input_name_type == 'str':
+        if df_nlevels > 1:
+            warnings.warn('It is multivar, but multiindex is not set with input_name '
+                          'or when specifying inputs. Hence, creating a regular timings object.', stacklevel=2)
+
+        # Convert MultiIndex dataframe to a regular one by packing in each tuple
+        if all([isinstance(dfi, tuple) for dfi in df_timings.index]):
+            df_timings.index = list(map(tuple, df_timings.index))
+        df_timings.index.name = input_name
+
+    else:
+        if multivar and df_nlevels > 1:
+            if input_name_type is None:
+                df_timings.index.names = ['Arg' + str(i) for i in range(df_nlevels)]
+                multiindex = True
+            elif input_name_type == 'list_or_tuple':
+                if len(input_name) < df_nlevels:
+                    raise Exception('For multivar case, input_name must be a list or tuple of input argument names for each argument.')
+                df_timings.index.names = input_name[:df_nlevels]
+                if df_nlevels > 1:
+                    multiindex = True
+            else:
+                raise Exception('Invalid input_name values for given input argument(s).')
+        else:
+            if input_name_type is None:
+                df_timings.index.name = xlabel_from_inputs
+            elif input_name_type == 'list_or_tuple':
+                df_timings.index.name = input_name[0]
+            else:
+                raise Exception('Invalid input_name values for given input argument(s).')
+
+    # High-level warning msg
+    if multivar and not multiindex:
+        warnings.warn('It is multivar, but multiindex is not set with input_name or when specifying inputs.', stacklevel=2)
+
+    benchObj = BenchmarkObj(df_timings, multivar=multivar, multiindex=multiindex)
     return benchObj
 
 
-def bench(df, dtype='t', copy=False):
+def _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize, label_fontsize, legend_fontsize, specs_position, dpi):
+    global _ENVIRON
+
+    if specs_fontsize is None:
+        specs_fontsize = fontsize
+    if tick_fontsize is None:
+        tick_fontsize = fontsize
+    if label_fontsize is None:
+        label_fontsize = fontsize
+    if legend_fontsize is None:
+        legend_fontsize = fontsize
+
+    plt.rcParams.update({'axes.titleweight': 'normal'})  # 'bold' or 'normal'
+
+    custom_params = {'axes.titlelocation': ('specs_position', specs_position),
+                     'axes.labelweight': ('axes_labelweight', 'bold'),
+                     'axes.titlesize': ('specs_fontsize', specs_fontsize),
+                     'axes.labelsize': ('label_fontsize', label_fontsize),
+                     'figure.dpi': ('dpi', dpi),
+                     'legend.fontsize': ('legend_fontsize', legend_fontsize),
+                     'legend.title_fontsize': ('legend_title_fontsize', legend_fontsize),
+                     'figure.constrained_layout.use': ('figure_constrained_layout_use', _ENVIRON == 'normal')}
+
+    skip_names = ['legend.title_fontsize']
+    for (i, (j0, j1)) in custom_params.items():
+        if j1 is not None:
+            if i in plt.rcParams:
+                plt.rcParams.update({i: j1})
+            elif i not in skip_names:
+                msg = 'Attribute ' + i + ' is not found in matplotlib rcParams. Hence, ' + j0 + ' is not set.'
+                msg += ' Using default rcParams value.'
+                warnings.warn(msg, stacklevel=2)
+    return tick_fontsize
+
+
+def _assign_mplibrcparams_for_subplot(fontsize,
+                                      label_fontsize,
+                                      title_fontsize,
+                                      legend_fontsize,
+                                      tick_fontsize,
+                                      title_position,
+                                      specs_fontsize,
+                                      dpi):
+    if dpi is not None:
+        plt.rcParams['figure.dpi'] = dpi
+
+    if specs_fontsize is None:
+        specs_fontsize = fontsize
+
+    if label_fontsize is None:
+        label_fontsize = fontsize
+
+    if title_fontsize is None:
+        title_fontsize = fontsize
+
+    if tick_fontsize is None:
+        tick_fontsize = fontsize
+
+    if legend_fontsize is None:
+        legend_fontsize = fontsize
+
+    # Set plt.rcParams
+    plt.rcParams['axes.labelsize'] = label_fontsize
+    plt.rcParams.update({'axes.titlelocation': title_position})
+    plt.rcParams.update({'axes.titlesize': title_fontsize})
+    plt.rcParams.update({'legend.title_fontsize': legend_fontsize})
+    plt.rcParams.update({'legend.fontsize': legend_fontsize})
+
+    # Non-parametric ones
+    plt.rcParams.update({'axes.titleweight': 'bold'})  # 'bold' or 'normal'
+    plt.rcParams.update({'axes.labelweight': 'bold'})  # 'bold' or 'normal'
+
+    return tick_fontsize, specs_fontsize
+
+
+def _getxticks(df, set_xticks_from_index=True):
+    lbl = df.index.values
+    d = np.array(lbl).dtype
+    is_xticks_number = np.issubdtype(d, np.floating) or np.issubdtype(d, np.integer)
+
+    xticks = None
+    if set_xticks_from_index:
+        if is_xticks_number:
+            xticks = df.index
+        else:
+            xticks = range(len(df))
+    return is_xticks_number, xticks
+
+
+def _get_groupings_old(df, subplot_argID):
+    names = pd.DataFrame(np.array(list(df.index), dtype=object), columns=df.index.names)
+    c = names.columns
+
+    if (subplot_argID >= len(c)) or (subplot_argID < -len(c)):
+        raise Exception('subplot_argID exceeds number of functions available.')
+
+    cols = np.setdiff1d(c, c[subplot_argID])
+    p = names.groupby(cols.tolist()).indices
+
+    nums = np.array(list(map(len, p.values())))
+    groupings_done = (nums[0] == nums).all() & (nums[0] > 1)
+    # print('groupings_done : '+str(groupings_done))
+
+    if not groupings_done:
+        warnings.warn('Groupings not done', stacklevel=2)
+
+    out, ncols = None, None
+    if groupings_done:
+        out = {}
+        for k, v in p.items():
+            df0 = df.iloc[v]
+            df0.index = df0.index.get_level_values(c[subplot_argID])
+            out[k] = df0
+
+        ncols = len(names.drop(names.columns[subplot_argID], axis=1).iloc[:, -1].unique())
+    return groupings_done, ncols, out
+
+
+def _get_groupings(df, subplot_argID):
+    # Default output values
+    out, ncols = None, None
+
+    names = pd.DataFrame(np.array(list(df.index), dtype=object), columns=df.index.names)
+    c = names.columns
+
+    if (subplot_argID >= len(c)) or (subplot_argID < -len(c)):
+        raise Exception('subplot_argID exceeds number of functions available.')
+
+    cols = np.setdiff1d(c, c[subplot_argID])
+
+    p = names.groupby(cols.tolist()).groups
+
+    first_grp_index_vals = names.iloc[p[list(p.keys())[0]], subplot_argID].values
+
+    # Check for absolute index matches, thus absolute combinations only.
+    #### FW : For future work, we might want to extend to partial combinations.
+    equal_indexes = all([np.array_equal(names.iloc[v, subplot_argID].values, first_grp_index_vals) for (k, v) in p.items()])
+    groupings_done = equal_indexes and len(first_grp_index_vals) > 1
+    # print('groupings_done : '+str(groupings_done))
+
+    if not groupings_done:
+        warnings.warn('Groupings not done', stacklevel=2)
+
+    if not groupings_done:
+        return groupings_done, ncols, out
+    else:
+        out = {}
+        for k, v in p.items():
+            df0 = df.iloc[v]
+            df0.index = df0.index.get_level_values(c[subplot_argID])
+            out[k] = df0
+
+        ncols = len(names.drop(names.columns[subplot_argID], axis=1).iloc[:, -1].unique())
+        return groupings_done, ncols, out
+
+
+def _mapvals(val, map_dict, name=None):
+    if name is None:
+        err_msg = 'Wrong value.'
+    else:
+        err_msg = 'Wrong value for ' + name + '.'
+    if val not in map_dict:
+        raise ValueError(err_msg)
+    return map_dict[val]
+
+
+# Setup title str for each subplot
+def _subplot_title_str(df, argID):
+    list_names = list(df.index.names)
+    list_names.pop(argID)
+    if len(list_names) == 1:
+        title_str = list_names[0] + ' : '
+    else:
+        title_str = '(' + ', '.join(list_names) + ') : '
+    return title_str
+
+
+def bench(df, dtype='t', copy=False, multivar=False, multiindex=False):
     """
     Constructor function for creating BenchmarkObj object from a pandas dataframe.
     With input arguments, it could set as a timings or speedups or scaled-timings object.
@@ -494,43 +724,12 @@ def bench(df, dtype='t', copy=False):
     else:
         raise TypeError('data type ' + '"' + str(dtype) + '" not understood')
 
-    if not copy:
-        return BenchmarkObj(df, dtype=dt)
+    if copy:
+        df_new = df.copy()
     else:
-        return BenchmarkObj(df.copy(), dtype=dt)
+        df_new = df
 
-
-def _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize, label_fontsize, legend_fontsize, specs_position, dpi):
-    global _ENVIRON
-
-    if specs_fontsize is None:
-        specs_fontsize = fontsize
-    if tick_fontsize is None:
-        tick_fontsize = fontsize
-    if label_fontsize is None:
-        label_fontsize = fontsize
-    if legend_fontsize is None:
-        legend_fontsize = fontsize
-
-    custom_params = {'axes.titlelocation': ('specs_position', specs_position),
-                     'axes.labelweight': ('axes_labelweight', 'bold'),
-                     'axes.titlesize': ('specs_fontsize', specs_fontsize),
-                     'axes.labelsize': ('label_fontsize', label_fontsize),
-                     'figure.dpi': ('dpi', dpi),
-                     'legend.fontsize': ('legend_fontsize', legend_fontsize),
-                     'legend.title_fontsize': ('legend_title_fontsize', legend_fontsize),
-                     'figure.constrained_layout.use': ('figure_constrained_layout_use', _ENVIRON == 'normal')}
-
-    skip_names = ['legend.title_fontsize']
-    for (i, (j0, j1)) in custom_params.items():
-        if j1 is not None:
-            if i in plt.rcParams:
-                plt.rcParams.update({i: j1})
-            elif i not in skip_names:
-                msg = 'Attribute ' + i + ' is not found in matplotlib rcParams. Hence, ' + j0 + ' is not set.'
-                msg += ' Using default rcParams value.'
-                warnings.warn(msg, stacklevel=2)
-    return tick_fontsize
+    return BenchmarkObj(df_new, dtype=dt, multivar=multivar, multiindex=multiindex)
 
 
 def _xticks_info_from_df(df):
@@ -572,9 +771,11 @@ class BenchmarkObj(object):
     This class is intended to hold timings data. It is the central building block to benchmarking workflow..
     """
 
-    def __init__(self, df_timings, dtype='timings'):
+    def __init__(self, df_timings, dtype='timings', multivar=False, multiindex=False):
         self.__df_timings = df_timings
         self.dtype = dtype
+        self.multivar = multivar
+        self.multiindex = multiindex
         self.__cols = df_timings.columns
 
     def scaled_timings(self, ref):
@@ -617,7 +818,7 @@ class BenchmarkObj(object):
         # Get scaled dataframe and hence the new BenchmarkObj
         st = df.div(df.iloc[:, index], axis=0)
         st.rename({st.columns[index]: 'Ref:' + st.columns[index]}, axis=1, inplace=True)
-        return BenchmarkObj(st, 'scaled_timings')
+        return BenchmarkObj(st, dtype='scaled_timings', multivar=self.multivar, multiindex=self.multiindex)
 
     def speedups(self, ref):
         """
@@ -638,25 +839,61 @@ class BenchmarkObj(object):
             raise AttributeError('speedups is not applicable on ' + self.dtype + ' object')
 
         s = 1. / BenchmarkObj.scaled_timings(self, ref).to_dataframe()
-        return BenchmarkObj(s, 'speedups')
+        return BenchmarkObj(s, dtype='speedups', multivar=self.multivar, multiindex=self.multiindex)
 
     def drop(self, labels, axis=1):
         """
-        Drop functions off the benchmarking object based on column index numbers.
+        Drop functions or datasets off the benchmarking object based on column or index values.
         It is an in-place operation.
 
         Parameters
         ----------
-        index : int or tuple/list of int column index value(s) to be dropped.
+        labels : Any scalar or list or tuple of scalars
+            Column or index value(s) to be dropped.
 
         Returns
         -------
         None
             NA.
         """
+
         df = self.__df_timings
         self.__df_timings = df.drop(labels, axis=axis)
         return
+
+    def show_columns(self):
+        """
+        Get reference to inherent dataframe columns.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        pandas.core.indexes.base.Index
+            Array of inherent dataframe columns.
+        """
+
+        df = self.__df_timings
+        return df.columns
+
+    def show_index(self):
+        """
+        Get reference to inherent dataframe columns.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        pandas.core.indexes.base.Index
+            Array of inherent dataframe columns.
+        """
+
+        df = self.__df_timings
+        return df.index
 
     def rank(self, mode='range'):
         """
@@ -676,6 +913,10 @@ class BenchmarkObj(object):
         """
 
         df = self.__df_timings
+        multiindex = self.multiindex
+
+        if multiindex:
+            raise Exception('Ranking is supported for groupings.')
 
         if mode == 'range':
             R = np.arange(1, len(df) + 1)
@@ -706,7 +947,59 @@ class BenchmarkObj(object):
             Copy of input BenchmarkObj object.
         """
 
-        return BenchmarkObj(self.__df_timings.copy(), self.dtype)
+        return BenchmarkObj(self.__df_timings.copy(), dtype=self.dtype, multivar=self.multivar, multiindex=self.multiindex)
+
+    def ploto(self, set_xticks_from_index=True,
+              xlabel=None,
+              ylabel=None,
+              colormap='jet',
+              logx=False,
+              logy=None,
+              grid=True,
+              linewidth=2,
+              rot=None,
+              dpi=None,
+              fontsize=14,
+              specs_fontsize=None,
+              tick_fontsize=None,
+              label_fontsize=None,
+              legend_fontsize=None,
+              figsize=None,
+              specs_position='left',
+              debug_plotfs=False,
+              pause_timefs=0.1,
+              modules=None,
+              save=None,
+              **kwargs):
+
+        dtype = self.dtype
+        df = self.__df_timings
+        logx, logy, ylabel, xticklabels, xticks = _get_plotparams_from_obj(df, dtype, logx, logy, ylabel)
+        available_linestyles = ['-.', '--', '-']
+        extls = np.resize(available_linestyles, df.shape[1]).tolist()
+        ax = df.plot(style=extls,
+                     colormap=_truncate_cmap(colormap),
+                     title=specs(modules=modules),
+                     rot=rot,
+                     fontsize=fontsize,
+                     linewidth=linewidth,
+                     logx=logx,
+                     logy=logy,
+                     figsize=figsize,
+                     **kwargs)
+
+        if grid:
+            ax.grid(True, which="both", ls="-")
+        if xlabel is not None:
+            ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        if set_xticks_from_index:
+            ax.set_xticklabels(xticklabels)
+            ax.set_xticks(xticks)
+
+        fullscreenfig(ax, pause_timefs, print_info=debug_plotfs)
+        return ax
 
     def plot(self, set_xticks_from_index=True,
              xlabel=None,
@@ -728,6 +1021,13 @@ class BenchmarkObj(object):
              debug_plotfs=False,
              pause_timefs=0.1,
              modules=None,
+             use_frame=False,
+             sp_argID=0,
+             sp_ncols=-1,
+             sp_sharey=None,
+             sp_title_position='center',
+             sp_title_fontsize=None,
+             sp_show_specs=True,
              save=None,
              **kwargs):
         """
@@ -779,6 +1079,33 @@ class BenchmarkObj(object):
             This is a pause number in seconds, used for plot to be rendered in fullscreen before saving it.
         modules : dict, optional
             Dictionary of modules.
+        use_frame : bool, optional
+            This indicates whether to use a frame or not.
+            For subplot, this applies a frame to each subplot.
+        sp_argID : int, optional
+            This is specific to subplot case, when applicable (combinations are possible).
+            This represents argument index for the input datasets to be used as the base (for x-axis labelling).
+            This is based on 0-based indexing. Default argument index is 0, i.e. the first argument.
+        sp_ncols : int, optional
+            This is specific to subplot case, when applicable (combinations are possible).
+            This denotes the number of columns used to create subplot grid.
+        sp_sharey : str or None, optional
+            This is specific to subplot case, when applicable (combinations are possible).
+            This is used to indicate if and how the y-values are to be shared.
+            Accepted values and their respective functionalities are listed below :
+                None : y-values are not shared.
+                'row' or 'r': y-values are shared among same row of subplots.
+                'global' or 'g': y-values are shared globally across all subplots.
+        sp_title_position : str, optional
+            This is specific to subplot case, when applicable (combinations are possible).
+            This indicates where to place the title for each subplot.
+            Available values are - 'left', 'center' or 'right' respective to their positions.
+        sp_title_fontsize : float or int or None, optional
+            This is specific to subplot case, when applicable (combinations are possible).
+            Fontsize for title for subplots that shows the grouping argument(s).
+        sp_show_specs : bool, optional
+            This decides whether to show specifications or not.
+            Default is True, i.e show specifications.
         save : str or None, optional
             Path to save plot.
         **kwargs
@@ -788,48 +1115,163 @@ class BenchmarkObj(object):
         -------
         matplotlib.axes._subplots.AxesSubplot
             Plot of data from object's dataframe.
+
+        Notes
+        -----
+        All subplot specific arguments have prefix of "sp_".
         """
 
         # Get dataframe and dtype
         dtype = self.dtype
         df = self.__df_timings
+        multiindex = self.multiindex
 
-        # Get plot params
-        # ylabel is sure to be assigned to something not None
-        logx, logy, ylabel, xticklabels, xticks = _get_plotparams_from_obj(df, dtype, logx, logy, ylabel)
+        style.use('bmh' if use_frame else 'fivethirtyeight')
 
+        # Setup styles
         available_linestyles = ['-.', '--', '-']
         extls = np.resize(available_linestyles, df.shape[1]).tolist()
 
-        tick_fontsize = _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize, label_fontsize, legend_fontsize, specs_position, dpi)
+        # Get plot params - logy, ylabel
+        if ylabel is None:
+            ylabel_map = {'timings': 'Runtime [s]', 'speedups': 'Speedup [x]', 'scaled_timings': 'Scaled Runtime [x]'}
+            ylabel = ylabel_map[dtype]
 
-        # Plot using dataframe data and its attributes
-        ax = df.plot(style=extls,
-                     colormap=_truncate_cmap(colormap),
-                     title=specs_str(modules=modules),
-                     rot=rot,
-                     fontsize=tick_fontsize,
-                     linewidth=linewidth,
-                     logx=logx,
-                     logy=logy,
-                     figsize=figsize,
-                     **kwargs)
+        if logy is None:
+            logy_map = {'timings': True, 'speedups': False, 'scaled_timings': False}
+            logy = logy_map[dtype]
 
-        if grid:
-            ax.grid(True, which="both", ls="-")
-        if xlabel is not None:
-            ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
+        groupings_done = False
+        if multiindex:
+            # Get groupings
+            groupings_done, ncols, out = _get_groupings(df, sp_argID)
+            if not groupings_done:
+                warnings.warn('It is multivar, but groupings are not possible. Hence, resorting to normal plot.', stacklevel=2)
 
-        if set_xticks_from_index:
-            ax.set_xticklabels(xticklabels)
-            ax.set_xticks(xticks)
+        if not groupings_done:  # normal plot
+            is_xticks_number, xticks = _getxticks(df, set_xticks_from_index=set_xticks_from_index)
 
-        # Save axes plot as an image file
-        fullscreenfig(ax, pause_timefs, print_info=debug_plotfs)
+            if not is_xticks_number and logx:
+                xticks = None
+                warnings.warn('Some xticks might be not be seen.', stacklevel=2)
+
+            tick_fontsize = _assign_mplibrcparams(fontsize, specs_fontsize, tick_fontsize,
+                                                  label_fontsize, legend_fontsize, specs_position, dpi)
+
+            # Plot using dataframe data and its attributes
+            ax = df.plot(style=extls,
+                         colormap=_truncate_cmap(colormap),
+                         title=specs(modules=modules),
+                         rot=rot,
+                         fontsize=tick_fontsize,
+                         linewidth=linewidth,
+                         logx=logx,
+                         logy=logy,
+                         figsize=figsize,
+                         xticks=xticks,
+                         **kwargs)
+
+            if grid:
+                ax.grid(True, which="both", ls="-")
+            if xlabel is not None:
+                ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+
+            if set_xticks_from_index and is_xticks_number:
+                ax.set_xticklabels(df.index)
+            if not is_xticks_number:  # earlier set_xticks_from_index or not is_xticks_number
+                ax.set_xticks([], minor=True)
+
+            # Show in fullscreen
+            fullscreenfig(ax, pause_timefs, print_info=debug_plotfs)
+            ax_fig = ax.figure
+        else:  # subplot
+            _SUBPLOT_FIGSIZE = (6.4, 3.6)
+
+            if figsize is None:
+                figsize = _SUBPLOT_FIGSIZE
+
+            if sp_ncols == -1:
+                sp_ncols = ncols
+
+            tick_fontsize, specs_fontsize = _assign_mplibrcparams_for_subplot(fontsize, label_fontsize, sp_title_fontsize,
+                                                                              legend_fontsize, tick_fontsize, sp_title_position,
+                                                                              specs_fontsize, dpi)
+
+            len1 = len(out)
+            nrows = int(np.ceil(len1 / float(sp_ncols)))
+            r, c = np.unravel_index(np.arange(len1), (nrows, sp_ncols))
+
+            map_dict = {None: False, 'row': 'row', 'r': 'row', 'global': True, 'g': True}
+            sharey_val = _mapvals(sp_sharey, map_dict, name='subplot_sharey')
+
+            # Setup title str for each subplot
+            title_str = _subplot_title_str(df, sp_argID)
+
+            df0 = out[list(out.keys())[0]]
+            is_xticks_number, xticks = _getxticks(df0, set_xticks_from_index=set_xticks_from_index)
+
+            if not is_xticks_number and logx:
+                xticks = None
+                warnings.warn('Some xticks might be not be seen.', stacklevel=2)
+
+            figS = (sp_ncols * figsize[0], nrows * figsize[1])
+            fig, axs = plt.subplots(nrows, sp_ncols, sharex='col', constrained_layout=True, sharey=sharey_val, figsize=figS)
+            axs = axs.reshape(-1, sp_ncols)
+
+            for i, (k, df0) in enumerate(out.items()):
+                ri, ci = r[i], c[i]
+                ax = axs[ri, ci]
+                is_first_subplot = (ri == 0) and (ci == 0)
+
+                subplot_title = str(k)
+                if is_first_subplot:
+                    subplot_title = title_str + subplot_title
+
+                df0.plot(ax=ax,
+                         style=extls,
+                         linewidth=linewidth,
+                         colormap=_truncate_cmap(colormap),
+                         xticks=xticks,
+                         logx=logx,
+                         logy=logy,
+                         rot=rot,
+                         title=subplot_title,
+                         fontsize=tick_fontsize,
+                         legend=i == 0,
+                         **kwargs)
+
+                if grid:
+                    ax.grid(True, which="both", ls="-")
+
+                # Next two IFs are needed for logx=True plots
+                if set_xticks_from_index and is_xticks_number:
+                    ax.set_xticklabels(df0.index)
+                if not is_xticks_number:  # earlier set_xticks_from_index or not is_xticks_number
+                    ax.set_xticks([], minor=True)
+
+            # Set ylabel on middle row ID
+            axs[nrows // 2, 0].set_ylabel(ylabel)
+
+            if sp_show_specs:
+                fig.suptitle(specs_short(), fontsize=specs_fontsize)
+
+            # remove unused axes
+            xlabel = df.index.names[sp_argID]
+            r, c = np.unravel_index(np.arange(len1, axs.size), (nrows, sp_ncols))
+            for (i, j) in zip(r, c):
+                ax = axs[i, j]
+                ax.set_xlabel(xlabel)
+                ax.tick_params(labelrotation=rot)
+                ax.yaxis.set_visible(False)
+                ax.patch.set_visible(False)
+                plt.setp(ax.spines.values(), visible=False)
+            ax_fig = fig
+
+        # Save figure
         if save is not None:
-            ax.figure.savefig(save, bbox_inches='tight')
-        return ax
+            ax_fig.savefig(save, bbox_inches='tight')
+        return ax_fig
 
     def reset_columns(self):
         """Reset columns to original order."""

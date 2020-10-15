@@ -4,6 +4,7 @@ import benchit
 from pprint import pprint
 import numpy as np
 
+#----------------------------- Multivar - Adding arrays -----------------------
 def new_array(a1, a2):
     a1 = a1 + a2
 
@@ -26,6 +27,7 @@ t = benchit.timings([new_array,inplace], inputs, multivar=True, input_name='Arra
 t.plot(logy=True, logx=False, save='multivar_addarrays_timings.png')
 plt.close("all")
 
+#--------------------------- Multivar - Euclidean distance --------------------
 # Setup input functions
 from sklearn.metrics.pairwise import pairwise_distances
 from scipy.spatial.distance import cdist
@@ -45,6 +47,18 @@ t = benchit.timings(fns, in_, multivar=True, input_name='Array-length')
 t.plot(logx=True, save='multivar_euclidean_timings.png')
 plt.close("all")
 
+#--------------------------- Multivar - groupings -----------------------------
+# Setup input datasets
+R = np.random.rand
+in_ = {(n,W):[R(n,W), R(n,W)] for n in [10, 100, 500, 1000] for W in [3, 5, 8, 10, 20, 50, 80, 100]}
+
+# Get benchmarking object (dataframe-like) and plot results
+t = benchit.timings(fns, in_, multivar=True, input_name=['nrows', 'ncols'])
+t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g', save='multigrp_id0_euclidean_timings.png')
+t.plot(logx=True, sp_ncols=2, sp_argID=1, sp_sharey='g', save='multigrp_id1_euclidean_timings.png')
+plt.close("all")
+
+#-------------------------------- Novar ---------------------------------------
 # Global inputs
 import numpy as np
 ar = np.arange(1000000)

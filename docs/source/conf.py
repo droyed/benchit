@@ -25,7 +25,7 @@ author = u'Divakar Roy'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'0.0.4'
+release = u'0.0.5'
 
 
 # -- General configuration ---------------------------------------------------

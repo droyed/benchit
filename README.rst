@@ -52,8 +52,8 @@ It's a *dataframe-like* object and as such we can plot it. It automatically adds
 
 |readme_1_timings|
 
-More realistic example
-^^^^^^^^^^^^^^^^^^^^^^
+Realistic example-1 (Multiple arguments)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's consider a setup where functions accept more than one argument. Let's take the case of computing `euclidean distances <https://en.wikipedia.org/wiki/Euclidean_distance>`__ between two `2D` arrays. We will feed in arrays with varying number of rows and 3 columns to represent data in 3D Cartesian coordinate system and benchmark two commonly used functions in Python.
 
@@ -70,15 +70,43 @@ Let's consider a setup where functions accept more than one argument. Let's take
 
 |readme_2_timings|
 
+Realistic example-2 (Multiple arguments with groupings)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Plotting on notebooks?
-^^^^^^^^^^^^^^^^^^^^^^
+We will extend the previous example to make the second argument a variable too and study the trend as we vary the number of columns.
 
-Simply use `benchit.set_environ('notebook')` before plotting.
+.. code-block:: python
 
-Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
+    # Get benchmarking object (dataframe-like) and plot results
+    >>> R = np.random.rand
+    >>> in_ = {(n,W):[R(n,W), R(n,W)] for n in [10, 100, 500, 1000] for W in [3, 20, 50, 100]}
+    >>> t = benchit.timings(fns, in_, multivar=True, input_name=['nrows', 'ncols'])
+    >>> t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g')
 
+For plotting, we are using number of rows as the x-axis base.
 
+|readme_3_timings|
+
+Quick Tips
+----------
+
+**1. Plotting on notebooks?**
+
+Use `benchit.setparams(environ='notebook')` before plotting. Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
+
+**2. Get a quick glance into the benchmarking trend before the actual one**
+
+Use `benchit.setparams(rep=1)` before plotting. Then, use `benchit.setparams()` for a proper benchmarking.
+
+**3. Get a quicker glance into plot layout and vague benchmarking trend before the actual one**
+
+Use `benchit.setparams(timeout=1e-5, rep=1)` before plotting. Then, use `benchit.setparams()` for a proper benchmarking.
+
+**4.  Working with multi-variable datasets to study trend w.r.t. each argument?**
+
+Use nested loops to set-up input datasets as shown earlier. More information is available in documentation.
+
+As a general rule, it's advisable to work on Python `3.6` or newer for better plotting experience.
 
 
 .. |Docs| image:: https://readthedocs.org/projects/benchit/badge/?version=latest
@@ -101,6 +129,4 @@ Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/do
 
 .. |readme_1_timings| image:: ./docs/source/readme_1_timings.png
 .. |readme_2_timings| image:: ./docs/source/readme_2_timings.png
-
-
-
+.. |readme_3_timings| image:: ./docs/source/multigrp_id0_euclidean_timings_readme.png

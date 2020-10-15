@@ -9,6 +9,8 @@ A minimal workflow employing this package would basically involve three steps :
 
 We will study these with the help of a sample setup in :ref:`Minimal workflow`.
 
+We will study about setting up functions and datasets in detail later in this document.
+
 .. note::
 
   Prior to Python 3.6, dictionary keys are not maintained in the order they are inserted. So, when working with those versions and with input dataset being defined as a dictionary, to keep the order, `collections.OrderedDict <https://docs.python.org/2/library/collections.html#collections.OrderedDict>`__ could be used.
@@ -32,7 +34,7 @@ Rest of the documentation will use the module's methods. So, let's import it onc
 Minimal workflow
 ----------------
 
-We will study a case of single argument with default parameters. Let's take a sample case where we try to benchmark the five most common NumPy ufuncs - `sum <https://numpy.org/doc/stable/reference/generated/numpy.sum.html>`__, `prod <https://numpy.org/doc/stable/reference/generated/numpy.prod.html>`__, `max <https://numpy.org/doc/stable/reference/generated/numpy.amax.html>`__, `mean <https://numpy.org/doc/stable/reference/generated/numpy.mean.html>`__, `median <https://numpy.org/doc/stable/reference/generated/numpy.median.html>`__ on arrays varying in their sizes. To keep it simple, let's consider `1D` arrays. Thus, the benchmarking steps would look something like this :
+We will study a case of single argument with default parameters. Let's take a sample case where we try to benchmark the five most common NumPy ufuncs - `sum <https://numpy.org/doc/stable/reference/generated/numpy.sum.html>`__, `prod <https://numpy.org/doc/stable/reference/generated/numpy.prod.html>`__, `max <https://numpy.org/doc/stable/reference/genebenchrated/numpy.amax.html>`__, `mean <https://numpy.org/doc/stable/reference/generated/numpy.mean.html>`__, `median <https://numpy.org/doc/stable/reference/generated/numpy.median.html>`__ on arrays varying in their sizes. To keep it simple, let's consider `1D` arrays. Thus, the benchmarking steps would look something like this :
 
 .. code-block:: python
 
@@ -65,10 +67,55 @@ Resultant plot would look something like this :
 These `4` lines of codes would be enough for most of the benchmarking workflows.
 
 
-Mixing in lambdas
------------------
+Extract dataframe & construct back
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`Lambda functions <https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions>`__ could be mixed into our functions for benchmarking with a dictionary. This is useful for directly incorporating one-liner solutions without the need of defining them beforehand. Let's take a sample setup where we will tile a `1D` array twice with various solutions as lambda and regular functions mixed in :
+The underlying benchmarking data is stored as a pandas dataframe that could be extracted with :
+
+.. code-block:: python
+
+    >>> df = t.to_dataframe()
+
+As we shall see in the next sections, this would be useful in our benchmarking quest to extend the capabilities.
+
+There's a benchmarking object construct function `benchit.bench` that accepts dataframe alongwith `dtype`. So, we can construct it, like so :
+
+.. code-block:: python
+
+    >>> t = benchit.bench(df, ...)
+
+
+Setup functions
+---------------
+
+This would be a list or dictionary of functions to be benchmarked.
+
+A general syntax for list version would look something like this :
+
+.. code-block:: python
+
+    >>> funcs = [func1, func2, ...]
+
+We already saw a sample of it in :ref:`Minimal workflow`.
+
+A general syntax for dictionary version would look something like this :
+
+.. code-block:: python
+
+    >>> funcs = {'func1_name':func1, 'func2_name':func2, ...}
+
+Mixing in lambdas
+^^^^^^^^^^^^^^^^^
+
+`Lambda functions <https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions>`__ could also be mixed into our functions for benchmarking with a dictionary. So, the general syntax would be :
+
+.. code-block:: python
+
+    >>> funcs = {'func1_name':func1, 'lambda1_name':lamda1, 'func2_name':func2, ...}
+
+This is useful for directly incorporating one-liner solutions without the need of defining them beforehand.
+
+Let's take a sample setup where we will tile a `1D` array twice with various solutions as lambda and regular functions mixed in :
 
 .. code-block:: python
 
@@ -85,26 +132,85 @@ Mixing in lambdas
              'tile':lambda a:np.tile(a,2)}
 
 
-Thus, this `funcs` could be then be used to benchmark with `benchit.timings`.
+Setup datasets
+--------------
 
+This would be a list or dictionary of datasets to be benchmarked.
 
-Extract dataframe & construct back
-----------------------------------
-
-The underlying benchmarking data is stored as a pandas dataframe that could be extracted with :
-
-.. code-block:: python
-
-    >>> df = t.to_dataframe()
-
-As we shall see in the next sections, this would be useful in our benchmarking quest to extend the capabilities.
-
-There's a benchmarking object construct function `benchit.bench` that accepts dataframe alongwith `dtype`. So, we can do the constructing step in two ways :
+A general syntax for list version would look something like this :
 
 .. code-block:: python
 
-    >>> t = benchit.bench(df, dtype=t.dtype)
+    >>> in_ = [dataset1, dataset2, ...]
 
+For such list type `inputs`, based on the datasets and additional argument `indexby` to `benchit.timings`, each dataset is assigned an `index`.
+
+A general syntax for dictionary version would look something like this :
+
+.. code-block:: python
+
+    >>> in_ = {'argument_value1':dataset1, 'argument_value2':dataset2, ...}
+
+For such dictionary type `inputs`, index values would be the dictionary keys.
+
+For both lists and dicts, these index values are used for plotting, etc. With single argument cases, this is pretty straight-forward.
+
+Now, we might have functions that accept more than one argument, let's call those as `multivar` cases and focus on those. Please keep in mind that for those `multivar` cases, we need to feed in `multivar=True` into `benchit.timings`.
+
+Pseudo code would look something like this :
+
+.. code-block:: python
+
+    >>> in_ = {m:generate_inputs(m,k1,k2) for m in m_list} # k1, k2 are constants
+    >>> t = benchit.timings(fncs, in_, multivar=True, input_name='arg0')
+
+
+Multiple arguments
+^^^^^^^^^^^^^^^^^^
+
+With some of those `multivar` cases, we might want to use keys as tuples or lists with a string each for each of the argument to the input as better representatives for each of the datasets. These would help us with plotting among others, as we shall see later.
+
+Thus, with functions that accept two arguments, it would be :
+
+.. code-block:: python
+
+    >>> in_ = {('argument1_value1','argument2_value1'):dataset1,
+               ('argument1_value2','argument2_value2'):dataset2, ...}
+
+Groupings
+"""""""""
+
+A specific case of forming such tuple/list key based dictionaries, we would be with nested loops. Such a setup enables us to form groupings, let's call them `multivar-groupings`. A sample one would look something like this :
+
+.. code-block:: python
+
+    >>> in_ = {('argument1_value1','argument2_value1'):dataset1,
+               ('argument1_value1','argument2_value2'):dataset2,
+               ('argument1_value1','argument2_value3'):dataset3,
+               ('argument1_value2','argument2_value1'):dataset4,
+               ('argument1_value2','argument2_value2'):dataset5,
+               ('argument1_value2','argument2_value3'):dataset6, ...}
+
+Regardless of the way `inputs` is setup, `benchit` would try to form combinations.
+
+So, for the `6` datasets case :
+
+- Considering `argument1` values as reference, we would have `2` groups - `(dataset1, 2, 3)` and `(dataset4, 5, 6)`.
+- Considering `argument2` values as reference, we would have `3` groups - `(dataset1, 4)`,  `(dataset2, 5)` and `(dataset3, 6)`.
+
+Then, those groupings could be plotted as subplots.
+
+Optionally, to finalize the groupings with proper names, we can assign names to each argument with `input_name` argument to `benchit.timings`. So, `input_name` would be a list or tuple specifying the names for each argument as its elements as strings. These would be picked up for labelling purpose when plotting.
+
+
+Pseudo code would look something like this :
+
+.. code-block:: python
+
+    >>> in_ = {(m,n):generate_inputs(m,n) for m in m_list for n in n_list}
+    >>> t = benchit.timings(fncs, in_, multivar=True, input_name=['arg0', 'arg1'])
+
+Plots on groupings would result in subplots. More on this with examples is shown later in this document.
 
 
 .. |timings| image:: timings.png

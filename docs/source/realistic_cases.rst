@@ -3,9 +3,11 @@ Real-world examples
 
 We will take few realistic scenarios and also study how arguments could be setup differently.
 
+Multiple arg
+------------
 
-Multiple arg : Adding arrays
-----------------------------
+Adding arrays
+^^^^^^^^^^^^^
 
 We will study a multiple argument case. This was inspired by `a Stack Overflow question <https://stackoverflow.com/questions/57024802/>`__ on adding two arrays. We will study the case of functions that accept two arguments. The two functions in consideration are :
 
@@ -24,7 +26,7 @@ Now, as mentioned earlier, for multiple argument cases, we need to feed in each 
 .. code-block:: python
 
     >>> R = np.random.rand
-    >>> inputs = {str((i,i)):(R(i,i),R(i,i)) for i in 2**np.arange(3,13)}
+    >>> inputs = {(i,i):(R(i,i),R(i,i)) for i in 2**np.arange(3,13)}
     >>> t = benchit.timings([new_array,inplace], inputs, multivar=True, input_name='Array-shape')
     >>> t.plot(logy=True, logx=False, save='multivar_addarrays_timings.png')
 
@@ -32,8 +34,11 @@ Now, as mentioned earlier, for multiple argument cases, we need to feed in each 
 
 Looking at the plot, we can conclude that the `write-back` one is better for larger arrays, which makes sense given its memory efficiency.
 
-Multiple arg : Euclidean distances
-----------------------------------
+Euclidean distance
+^^^^^^^^^^^^^^^^^^
+
+Single variable
+"""""""""""""""
 
 We will study another multiple argument case. The setup involves `euclidean distances <https://en.wikipedia.org/wiki/Euclidean_distance>`__ between two `2D` arrays. We will feed in arrays with varying number of rows and 3 columns to represent data in 3D Cartesian coordinate system and benchmark two commonly used functions in Python.
 
@@ -54,11 +59,37 @@ We will study another multiple argument case. The setup involves `euclidean dist
     
 |multivar_euclidean_timings|
 
+Multivar-groupings
+^^^^^^^^^^^^^^^^^^
 
-No arg : Random sampling
-------------------------
+We will simply extend previous test-case to cover for the second argument to the distance functions, i.e. with varying number of columns. We will re-use most of that earlier setup.
 
-Finally, there might be cases when input functions have external no argument required. To create one such scenario, let's consider a setup where we compare `numpy.random.choice <https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html>`__ against `random.sample <https://docs.python.org/3/library/random.html#random.sample>`__ to get samples without replacement. We will consider an input data of `1000,000` elements and use those functions to extract `1000` samples. We will test out `random.sample` with two kinds of data - array and list, while feeding only array data to `numpy.random.choice`. Thus, in total we have three solutions.
+Also, we will explore subplot specific arguments available with `plot`. These are marked with prefix as : `sp_`, short for `subplot_`.
+
+.. code-block:: python
+
+    >>> R = np.random.rand
+    >>> in_ = {(n,W):[R(n,W), R(n,W)] for n in [10, 100, 500, 1000] for W in [3, 5, 8, 10, 20, 50, 80, 100]}
+    >>> t = benchit.timings(fns, in_, multivar=True, input_name=['nrows', 'ncols'])
+    >>> t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g', save='multigrp_id0_euclidean_timings.png')
+    >>> t.plot(logx=True, sp_ncols=2, sp_argID=1, sp_sharey='g', save='multigrp_id1_euclidean_timings.png') 
+
+
+Grouping based on `argID = 0` :
+
+|multivar_euclidean_timings_grp0|
+
+Grouping based on `argID = 1` :
+
+|multivar_euclidean_timings_grp1|
+
+No argument
+-----------
+
+Random sampling
+^^^^^^^^^^^^^^^
+
+Finally, there might be cases when input functions have external no argument required. To create one such scenario, let's consider a setup where we compare `numpy.random.choice <https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html>`__ against `random.sample <https://docs.python.org/3/library/random.html#random.sample>`__ to get samples without replacement. We will consider an input data of `1000,000` elements and use those functions to extract `1000` samples. We will test out `random.sample` with two kinds of data - array and list, while feeding only array data to `numpy.random.choice`. Thus, in total we have three solutions, as listed in the full benchmarking shown below :
 
 .. code-block:: python
 
@@ -96,3 +127,5 @@ One interesting observation there - With array data `numpy.random.choice` is sli
 
 .. |multivar_addarrays_timings| image:: multivar_addarrays_timings.png
 .. |multivar_euclidean_timings| image:: multivar_euclidean_timings.png
+.. |multivar_euclidean_timings_grp0| image:: multigrp_id0_euclidean_timings.png
+.. |multivar_euclidean_timings_grp1| image:: multigrp_id1_euclidean_timings.png

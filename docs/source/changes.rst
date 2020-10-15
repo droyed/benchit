@@ -1,8 +1,22 @@
 Changelog
 =========
 
+0.0.5 (2020-10-15)
+------------------
+
+Changes :
+
+- Changes were applied at various levels to accommodate multiple arguments input with combinations cases mostly generated through nested loops over those arguments. Such combinations are led to generate subplots. This sub-plotting workflow is integrated to usual plotting mechanism to provide a one-stop solution. As such, the interface to the user stays the same, but with additional feature of sub-plotting for the combinations case.
+- New one-line `specs` information.
+- Framing feature added for plotting.
+
+Bug fixes :
+
+- Fix for `logx` set as `True` and `set_xticks_from_index` set as `True` when dealing with various inputs on plotting.
+
+
 0.0.4 (2020-08-06)
---------------------
+------------------
 
 Changes :
 

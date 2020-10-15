@@ -5,9 +5,29 @@ import multiprocessing
 import platform
 from cpuinfo import get_cpu_info
 from psutil import virtual_memory
+import re
 
 
-def specs_str(modules=None):
+def specs_short():
+    cpuinfo_ = get_cpu_info()
+    if 'brand' in cpuinfo_:
+        CPU_brand = cpuinfo_['brand']
+    elif 'brand_raw' in cpuinfo_:
+        CPU_brand = cpuinfo_['brand_raw']
+    else:
+        CPU_brand = 'NA'
+
+    CPU_brand = CPU_brand.replace('CPU @', '').replace('  ', ' ')
+    CPU_brand = re.sub(r'\([^)]*\)', '', CPU_brand)
+    cores = str(multiprocessing.cpu_count()) + ' Cores'
+    mem = 'Mem-' + str(round(virtual_memory().total / 1024.**3)) + 'G'
+    os = 'OS-' + platform.platform().split('-')[0]
+    py_ver = 'Py-' + '.'.join(platform.python_version().split('.')[:2])
+    info = ', '.join([CPU_brand, cores, mem, os, py_ver])
+    return info
+
+
+def specs(modules=None):
     """
     Get plot specifications as a string for use as plot title.
 
@@ -102,7 +122,7 @@ def _get_module_versions(mods):
     return out
 
 
-def print_specs(modules=None):
+def specs_print(modules=None):
     """
     Print system specifications.
 
