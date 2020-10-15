@@ -52,8 +52,8 @@ It's a *dataframe-like* object and as such we can plot it. It automatically adds
 
 |readme_1_timings|
 
-Realistic example-1 (Multiple arguments)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Multiple arguments
+^^^^^^^^^^^^^^^^^^
 
 Let's consider a setup where functions accept more than one argument. Let's take the case of computing `euclidean distances <https://en.wikipedia.org/wiki/Euclidean_distance>`__ between two `2D` arrays. We will feed in arrays with varying number of rows and 3 columns to represent data in 3D Cartesian coordinate system and benchmark two commonly used functions in Python.
 
@@ -70,8 +70,8 @@ Let's consider a setup where functions accept more than one argument. Let's take
 
 |readme_2_timings|
 
-Realistic example-2 (Multiple arguments with groupings)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Multiple arguments with groupings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will extend the previous example to make the second argument a variable too and study the trend as we vary the number of columns.
 
