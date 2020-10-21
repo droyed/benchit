@@ -164,53 +164,58 @@ Pseudo code would look something like this :
     >>> in_ = {m:generate_inputs(m,k1,k2) for m in m_list} # k1, k2 are constants
     >>> t = benchit.timings(fncs, in_, multivar=True, input_name='arg0')
 
-
-Multiple arguments
-^^^^^^^^^^^^^^^^^^
-
-With some of those `multivar` cases, we might want to use keys as tuples or lists with a string each for each of the argument to the input as better representatives for each of the datasets. These would help us with plotting among others, as we shall see later.
-
-Thus, with functions that accept two arguments, it would be :
-
-.. code-block:: python
-
-    >>> in_ = {('argument1_value1','argument2_value1'):dataset1,
-               ('argument1_value2','argument2_value2'):dataset2, ...}
-
 Groupings
-"""""""""
+^^^^^^^^^
 
-A specific case of forming such tuple/list key based dictionaries, we would be with nested loops. Such a setup enables us to form groupings, let's call them `multivar-groupings`. A sample one would look something like this :
+Groupings are applicable for both single and multiple variable cases.
+
+There are essentially two rules to form groupings :
+
+-  Use dictionary as `inputs`.
+-  Use a nested loop structure to form the input datasets with tuples of input parameters as the dictionary keys. These keys could be derived from the input arguments or otherwise. Essentially, we would have two or more sources of forming that input argument(s) and those are to be listed as the keys.
+
+Thus, considering two sources, a general structure would be :
 
 .. code-block:: python
 
-    >>> in_ = {('argument1_value1','argument2_value1'):dataset1,
-               ('argument1_value1','argument2_value2'):dataset2,
-               ('argument1_value1','argument2_value3'):dataset3,
-               ('argument1_value2','argument2_value1'):dataset4,
-               ('argument1_value2','argument2_value2'):dataset5,
-               ('argument1_value2','argument2_value3'):dataset6, ...}
+    >>> in_ = {(source1_value1, source2_value1): dataset1,
+               (source1_value2, source2_value2): dataset2, ...}
 
-Regardless of the way `inputs` is setup, `benchit` would try to form combinations.
+As stated earlier, with multiple arguments case, as the most common scenario, we would have the input arguments put in as the key elements. Thus, with functions that accept two arguments, it would be :
 
-So, for the `6` datasets case :
+.. code-block:: python
+
+    >>> in_ = {(argument1_value1, argument2_value1): dataset1,
+               (argument1_value2, argument2_value2): dataset2, ...}
+
+**Example :**
+
+Let's take a complete example to understand groupings :
+
+.. code-block:: python
+
+    >>> in_ = {(argument1_value1, argument2_value1): dataset1,
+               (argument1_value1, argument2_value2): dataset2,
+               (argument1_value1, argument2_value3): dataset3,
+               (argument1_value2, argument2_value1): dataset4,
+               (argument1_value2, argument2_value2): dataset5,
+               (argument1_value2, argument2_value3): dataset6, ...}
+
+Thus,
 
 - Considering `argument1` values as reference, we would have `2` groups - `(dataset1, 2, 3)` and `(dataset4, 5, 6)`.
 - Considering `argument2` values as reference, we would have `3` groups - `(dataset1, 4)`,  `(dataset2, 5)` and `(dataset3, 6)`.
 
-Then, those groupings could be plotted as subplots.
 
 Optionally, to finalize the groupings with proper names, we can assign names to each argument with `input_name` argument to `benchit.timings`. So, `input_name` would be a list or tuple specifying the names for each argument as its elements as strings. These would be picked up for labelling purpose when plotting.
 
-
-Pseudo code would look something like this :
+Thus, a complete pseudo code to form groupings with a two-level nested loop would look something like this :
 
 .. code-block:: python
 
     >>> in_ = {(m,n):generate_inputs(m,n) for m in m_list for n in n_list}
-    >>> t = benchit.timings(fncs, in_, multivar=True, input_name=['arg0', 'arg1'])
+    >>> t = benchit.timings(fncs, in_, input_name=['arg0', 'arg1'])
 
-Plots on groupings would result in subplots. More on this with examples is shown later in this document.
-
+Plots on groupings would result in subplots. More on this with examples is shown later in this document. Note that we can have a `n-level` nested loop structure and the subplots would take care of the plotting. More on this with real-world examples is shown later in this document.
 
 .. |timings| image:: timings.png
