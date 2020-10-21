@@ -90,8 +90,8 @@ For plotting, we are using number of rows as the x-axis base.
 Use `sp_argID=1` to switch-over to use number of cols as the x-axis base instead.
 
 
-Single arguments with groupings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Single argument with groupings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's manufacture a simple forward-filling scheme based on indices of `True` values in a boolean-array :
 
