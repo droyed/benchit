@@ -94,6 +94,53 @@ Grouping based on `argID = 1` :
 
 Some interesting obseravtions could be made there. The implementations are obviously different. This is resulting in `pairwise_distances` winning as we move to higher number of columns. Though, on smaller datasets or with smaller number of rows, `cdist` is clearly ahead.
 
+
+Single arg
+----------
+
+Forward-fill on mask
+^^^^^^^^^^^^^^^^^^^^
+
+Single-variable Groupings
+"""""""""""""""""""""""""
+
+Let's manufacture a simple forward-filling scheme based on indices of `True` values in a boolean-array, whereas `False` should keep previous values. Also, the values would be kept as `0s` until the first `True`.
+
+To give it a better understanding, two examples should clarify with a solution based on `np.maximum.accumulate` :
+
+.. code-block:: python
+
+    >>> b
+    array([ True, False,  True,  True, False, False, False,  True, False, False])
+    >>> np.maximum.accumulate(np.where(b,np.arange(len(b)), 0))
+    array([0, 0, 2, 3, 3, 3, 3, 7, 7, 7])
+
+    >>> b
+    array([False, False, False,  True, False, False, False,  True, False, False])
+    >>> np.maximum.accumulate(np.where(b,np.arange(len(b)), 0))
+    array([0, 0, 0, 3, 3, 3, 3, 7, 7, 7])
+
+
+We could also solve it with `np.repeat` based on the counts between consecutive `True` ones. Let's benchmark these two methods :
+
+.. code-block:: python
+
+    # Functions
+    def repeat(b):
+        idx = np.flatnonzero(np.r_[b,True])
+        return np.repeat(idx[:-1], np.diff(idx))
+    
+    def maxaccum(b):
+        return np.maximum.accumulate(np.where(b,np.arange(len(b)), 0))
+        
+    in_ = {(n,sf): np.random.rand(n)<(100-sf)/100. for n in [100,1000,10000,100000,1000000] for sf in [20, 40, 60, 80, 90, 95]}
+    t = benchit.timings([repeat, maxaccum], in_, input_name=['Array-length','Sparseness %'])
+    t.plot(logx=True, sp_ncols=2, save='singlegrp_id0_ffillmask_timings.png')
+    
+|singlevar_ffillmask_timings_grp0|
+
+As always, some interesting inferences could be derived there. Seems `np.maximum.accumulate` is winning on most occasions, whereas `repeat` based one is doing better on highly sparse big datasets.
+
 No argument
 -----------
 
@@ -140,3 +187,4 @@ One interesting observation there - With array data `numpy.random.choice` is sli
 .. |multivar_euclidean_timings| image:: multivar_euclidean_timings.png
 .. |multivar_euclidean_timings_grp0| image:: multigrp_id0_euclidean_timings.png
 .. |multivar_euclidean_timings_grp1| image:: multigrp_id1_euclidean_timings.png
+.. |singlevar_ffillmask_timings_grp0| image:: singlegrp_id0_ffillmask_timings.png

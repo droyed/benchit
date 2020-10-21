@@ -459,7 +459,7 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     df_timings.columns.name = 'Functions'
 
     # Setup index properties in the dataframe
-    if isinstance(inputs, dict) and multivar:
+    if isinstance(inputs, dict):
         df_timings.index = inputs.keys()
     else:
         df_timings.index = xticklabels
@@ -475,8 +475,8 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
     df_nlevels = df_timings.index.nlevels
     if input_name_type == 'str':
         if df_nlevels > 1:
-            warnings.warn('It is multivar, but multiindex is not set with input_name '
-                          'or when specifying inputs. Hence, creating a regular timings object.', stacklevel=2)
+            warnings.warn('Multiindex is not set with input_name or when specifying inputs.'
+                          'Hence, creating a regular timings object.', stacklevel=2)
 
         # Convert MultiIndex dataframe to a regular one by packing in each tuple
         if all([isinstance(dfi, tuple) for dfi in df_timings.index]):
@@ -484,13 +484,13 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
         df_timings.index.name = input_name
 
     else:
-        if multivar and df_nlevels > 1:
+        if df_nlevels > 1:
             if input_name_type is None:
                 df_timings.index.names = ['Arg' + str(i) for i in range(df_nlevels)]
                 multiindex = True
             elif input_name_type == 'list_or_tuple':
                 if len(input_name) < df_nlevels:
-                    raise Exception('For multivar case, input_name must be a list or tuple of input argument names for each argument.')
+                    raise Exception('For groupings case, input_name must be a list or tuple of input argument names for each argument.')
                 df_timings.index.names = input_name[:df_nlevels]
                 if df_nlevels > 1:
                     multiindex = True
@@ -503,10 +503,6 @@ def timings(funcs, inputs=None, multivar=False, input_name=None, indexby='auto')
                 df_timings.index.name = input_name[0]
             else:
                 raise Exception('Invalid input_name values for given input argument(s).')
-
-    # High-level warning msg
-    if multivar and not multiindex:
-        warnings.warn('It is multivar, but multiindex is not set with input_name or when specifying inputs.', stacklevel=2)
 
     benchObj = BenchmarkObj(df_timings, multivar=multivar, multiindex=multiindex)
     return benchObj
@@ -861,6 +857,23 @@ class BenchmarkObj(object):
         self.__df_timings = df.drop(labels, axis=axis)
         return
 
+    def props(self):
+        """
+        Show object properties without the dataframe.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            NA
+        """
+
+        info = {'dtype': self.dtype, 'multivar': self.multivar, 'multiindex': self.multiindex}
+        return info
+
     def show_columns(self):
         """
         Get reference to inherent dataframe columns.
@@ -1094,7 +1107,7 @@ class BenchmarkObj(object):
             # Get groupings
             groupings_done, ncols, out = _get_groupings(df, sp_argID)
             if not groupings_done:
-                warnings.warn('It is multivar, but groupings are not possible. Hence, resorting to normal plot.', stacklevel=2)
+                warnings.warn('Groupings are not possible. Hence, resorting to normal plot.', stacklevel=2)
 
         if not groupings_done:  # normal plot
             is_xticks_number, xticks = _getxticks(df, set_xticks_from_index=set_xticks_from_index)
@@ -1219,7 +1232,7 @@ class BenchmarkObj(object):
         # Save figure
         if save is not None:
             ax_fig.savefig(save, bbox_inches='tight')
-        return ax_fig
+        return
 
     def reset_columns(self):
         """Reset columns to original order."""

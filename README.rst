@@ -89,6 +89,28 @@ For plotting, we are using number of rows as the x-axis base.
 
 Use `sp_argID=1` to switch-over to use number of cols as the x-axis base instead.
 
+
+Single arguments with groupings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's manufacture a simple forward-filling scheme based on indices of `True` values in a boolean-array :
+
+.. code-block:: python
+
+    # Functions
+    def repeat(b):
+        idx = np.flatnonzero(np.r_[b,True])
+        return np.repeat(idx[:-1], np.diff(idx))
+    
+    def maxaccum(b):
+        return np.maximum.accumulate(np.where(b,np.arange(len(b)), 0))
+        
+    in_ = {(n,sf): np.random.rand(n)<(100-sf)/100. for n in [100,1000,10000,100000,1000000] for sf in [20, 40, 60, 80, 90, 95]}
+    t = benchit.timings([repeat, maxaccum], in_, input_name=['Array-length','Sparseness %'])
+    t.plot(logx=True, sp_ncols=2, save='singlegrp_id0_ffillmask_timings.png')
+
+|readme_4_timings|
+
 Quick Tips
 ----------
 
@@ -132,3 +154,4 @@ As a general rule, it's advisable to work on Python `3.6` or newer for better pl
 .. |readme_1_timings| image:: ./docs/source/readme_1_timings.png
 .. |readme_2_timings| image:: ./docs/source/readme_2_timings.png
 .. |readme_3_timings| image:: ./docs/source/multigrp_id0_euclidean_timings_readme.png
+.. |readme_4_timings| image:: ./docs/source/singlegrp_id0_ffillmask_timings.png

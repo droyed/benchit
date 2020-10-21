@@ -58,6 +58,20 @@ t.plot(logx=True, sp_ncols=2, sp_argID=0, sp_sharey='g', save='multigrp_id0_eucl
 t.plot(logx=True, sp_ncols=2, sp_argID=1, sp_sharey='g', save='multigrp_id1_euclidean_timings.png')
 plt.close("all")
 
+#--------------------------- Singlevar - groupings ---------------------------
+# Functions
+def repeat(b):
+    idx = np.flatnonzero(np.r_[b,True])
+    return np.repeat(idx[:-1], np.diff(idx))
+
+def maxaccum(b):
+    return np.maximum.accumulate(np.where(b,np.arange(len(b)), 0))
+    
+in_ = {(n,sf): np.random.rand(n)<(100-sf)/100. for n in [100,1000,10000,100000,1000000] for sf in [20, 40, 60, 80, 90, 95]}
+t = benchit.timings([repeat, maxaccum], in_, input_name=['Array-length','Sparseness %'])
+t.plot(logx=True, sp_ncols=2, save='singlegrp_id0_ffillmask_timings.png')
+plt.close("all")
+
 #-------------------------------- Novar ---------------------------------------
 # Global inputs
 import numpy as np
