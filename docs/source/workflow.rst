@@ -216,6 +216,6 @@ Thus, a complete pseudo code to form groupings with a two-level nested loop woul
     >>> in_ = {(m,n):generate_inputs(m,n) for m in m_list for n in n_list}
     >>> t = benchit.timings(fncs, in_, input_name=['arg0', 'arg1'])
 
-Plots on groupings would result in subplots. More on this with examples is shown later in this document. Note that we can have a `n-level` nested loop structure and the subplots would take care of the plotting. More on this with real-world examples is shown later in this document.
+Plots on groupings would result in subplots. More on this with examples is shown later in this document. Note that we can have a `n-level` nested loop structure and the subplots would take care of the plotting.
 
 .. |timings| image:: timings.png
