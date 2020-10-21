@@ -7,7 +7,7 @@ Changelog
 Changes :
 
 - Added single-var groupings.
-- Added props method to `BenchmarkObj` to list meta information about it.
+- Added props function to `BenchmarkObj` to list meta information about it.
 
 
 0.0.5 (2020-10-15)
