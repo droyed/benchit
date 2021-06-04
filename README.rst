@@ -120,17 +120,17 @@ Use ``benchit.setparams(environ='notebook')`` before plotting. Check out `sample
 
 **2. Get a quick glance into the benchmarking trend before the actual one**
 
-Use `benchit.setparams(rep=1)` before plotting. Then, use `benchit.setparams()` for a proper benchmarking.
+Use ``benchit.setparams(rep=1)`` before plotting. Then, use ``benchit.setparams()`` for a proper benchmarking.
 
 **3. Get a quicker glance into plot layout and vague benchmarking trend before the actual one**
 
-Use `benchit.setparams(timeout=1e-5, rep=1)` before plotting. Then, use `benchit.setparams()` for a proper benchmarking.
+Use ``benchit.setparams(timeout=1e-5, rep=1)`` before plotting. Then, use ``benchit.setparams()`` for a proper benchmarking.
 
 **4.  Working with multi-variable datasets to study trend w.r.t. each argument?**
 
 Use nested loops to set-up input datasets as shown earlier. More information is available in documentation.
 
-As a general rule, it's advisable to work on Python `3.6` or newer for better plotting experience.
+As a general rule, it's advisable to work on Python ``3.6`` or newer for better plotting experience.
 
 
 .. |Docs| image:: https://readthedocs.org/projects/benchit/badge/?version=latest
