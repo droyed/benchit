@@ -4,7 +4,7 @@ benchit (BENCHmark IT!)
 |Py-Versions| |Py-LatestVersion| |GitHub-Releases| |PyPI-Downloads|  |GitHub-License|
 
 
-Tools to benchmark Python solutions on runtime performance and visualize. Based on `timeit`, it primarily aims to functionally simulate the `timeit <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-timeit>`__ behaviour and hence the name! This facilitates benchmarking on multiple datasets and solutions.
+Tools to benchmark Python solutions on runtime performance and visualize. Based on ``timeit``, it primarily aims to functionally simulate the `timeit <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-timeit>`__ behaviour and hence the name! This facilitates benchmarking on multiple datasets and solutions.
 
 
 Documentation
@@ -33,7 +33,7 @@ Pull latest development release on GitHub and install in the current directory :
 Getting started
 ^^^^^^^^^^^^^^^
 
-Consider a setup to compare NumPy ufuncs - `sum <https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html>`__, `prod <https://docs.scipy.org/doc/numpy/reference/generated/numpy.prod.html>`__, `max <https://docs.scipy.org/doc/numpy/reference/generated/numpy.amax.html>`__ on arrays varying in their sizes. To keep it simple, let's consider `1D` arrays. Thus, we would have :
+Consider a setup to compare NumPy ufuncs - `sum <https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html>`__, `prod <https://docs.scipy.org/doc/numpy/reference/generated/numpy.prod.html>`__, `max <https://docs.scipy.org/doc/numpy/reference/generated/numpy.amax.html>`__ on arrays varying in their sizes. To keep it simple, let's consider ``1D`` arrays. Thus, we would have :
 
 .. code-block:: python
 
@@ -55,7 +55,7 @@ It's a *dataframe-like* object and as such we can plot it. It automatically adds
 Multiple arguments
 ^^^^^^^^^^^^^^^^^^
 
-Let's consider a setup where functions accept more than one argument. Let's take the case of computing `euclidean distances <https://en.wikipedia.org/wiki/Euclidean_distance>`__ between two `2D` arrays. We will feed in arrays with varying number of rows and 3 columns to represent data in 3D Cartesian coordinate system and benchmark two commonly used functions in Python.
+Let's consider a setup where functions accept more than one argument. Let's take the case of computing `euclidean distances <https://en.wikipedia.org/wiki/Euclidean_distance>`__ between two ``2D`` arrays. We will feed in arrays with varying number of rows and 3 columns to represent data in ``3D`` Cartesian coordinate system and benchmark two commonly used functions in Python.
 
 .. code-block:: python
 
@@ -87,7 +87,7 @@ For plotting, we are using number of rows as the x-axis base.
 
 |readme_3_timings|
 
-Use `sp_argID=1` to switch-over to use number of cols as the x-axis base instead.
+Use ``sp_argID=1`` to switch-over to use number of cols as the x-axis base instead.
 
 
 Single argument with groupings
