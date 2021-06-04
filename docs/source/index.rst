@@ -28,6 +28,7 @@ Dependencies
 - `pandas <https://pandas.pydata.org/>`__
 - `psutil <https://pypi.org/project/psutil/>`__
 - `tqdm <https://pypi.org/project/tqdm/>`__
+- `ipython <https://pypi.org/project/ipython/>`__
 
 Quick start
 -----------

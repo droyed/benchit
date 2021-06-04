@@ -53,7 +53,7 @@ setup(name=package_name,
           'Operating System :: OS Independent',
           ],
       keywords='benchmarking performance timing timeit',
-      install_requires=["pandas", "numpy", "py-cpuinfo", "tqdm", "psutil", "matplotlib"],
+      install_requires=["pandas", "numpy", "py-cpuinfo", "tqdm", "psutil", "matplotlib", "ipython"],
       extras_require={
           'optional': optional_dependencies,
           'development': optional_dependencies + development_dependencies,
