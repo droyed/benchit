@@ -116,7 +116,7 @@ Quick Tips
 
 **1. Plotting on notebooks?**
 
-Use `benchit.setparams(environ='notebook')` before plotting. Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
+Use ``benchit.setparams(environ='notebook')`` before plotting. Check out `sample notebook run <https://github.com/droyed/benchit/blob/master/docs/source/PlotDemo-NotebookEnv.ipynb>`__.
 
 **2. Get a quick glance into the benchmarking trend before the actual one**
 
