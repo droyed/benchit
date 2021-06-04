@@ -8,6 +8,9 @@ Changes :
 
 - Added single-var groupings.
 - Added props method to `BenchmarkObj` to list meta information about it.
+
+Bug fixes :
+
 - Fixed `ipython` dependency.
 
 
