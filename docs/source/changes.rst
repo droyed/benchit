@@ -1,13 +1,14 @@
 Changelog
 =========
 
-0.0.6 (not released)
---------------------
+0.0.6 (2021-06-04)
+------------------
 
 Changes :
 
 - Added single-var groupings.
 - Added props method to `BenchmarkObj` to list meta information about it.
+- Fixed `ipython` dependency.
 
 
 0.0.5 (2020-10-15)
